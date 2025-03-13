@@ -1,0 +1,24 @@
+name: dl_maniqa
+channels:
+  - conda-forge
+  - pytorch
+  - nvidia
+  - defaults
+dependencies:
+  - python=3.9
+  - numpy<2
+  - opencv
+  - pytorch-cuda=11.8
+  - pytorch=2.2.0
+  - torchvision=0.17.0
+  - torchaudio=2.2.0
+  - tensorboard
+  - tensorboardX
+  - tqdm
+  - einops
+  - pandas
+  - scikit-learn
+  - pip
+  - cudatoolkit=11.8
+  - pip:
+    - torchsummary
