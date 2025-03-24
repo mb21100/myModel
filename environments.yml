@@ -20,5 +20,6 @@ dependencies:
   - scikit-learn
   - pip
   - cudatoolkit=11.8
+  - thop
   - pip:
     - torchsummary

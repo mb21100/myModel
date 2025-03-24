@@ -1,0 +1,224 @@
+{
+    "iteration_0": {
+        "fold_0": {
+            "train_folders": [
+                "Animal1",
+                "Animal3",
+                "Building1",
+                "Building5",
+                "CityStreetDay1",
+                "CityStreetDay2",
+                "CityStreetNight",
+                "Face1",
+                "Face3",
+                "Face5",
+                "Nature4",
+                "Nature9",
+                "People1",
+                "People4",
+                "TextCompIn1",
+                "TextCompOut1",
+                "TextCompOut3",
+                "TextSimpIn2",
+                "TextSimpOut2"
+            ],
+            "valid_folders": [
+                "Animal2",
+                "Building2",
+                "Nature6",
+                "People5",
+                "TextCompIn3"
+            ],
+            "results": [
+                {
+                    "epoch": 1,
+                    "train_loss": [
+                        0.05256562952526586,
+                        0.5714634157681068,
+                        0.5931147498210613
+                    ],
+                    "val_loss": 0.04227326533291489,
+                    "srcc": 0.7296326413753925,
+                    "plcc": 0.6697560695228116,
+                    "krcc": 0.5921419695025032
+                }
+            ]
+        },
+        "fold_1": {
+            "train_folders": [
+                "Animal1",
+                "Animal2",
+                "Animal3",
+                "Building1",
+                "Building2",
+                "Building5",
+                "CityStreetDay1",
+                "CityStreetDay2",
+                "CityStreetNight",
+                "Face1",
+                "Face3",
+                "Face5",
+                "Nature4",
+                "Nature6",
+                "People1",
+                "People5",
+                "TextCompIn3",
+                "TextCompOut1",
+                "TextSimpOut2"
+            ],
+            "valid_folders": [
+                "Nature9",
+                "People4",
+                "TextCompIn1",
+                "TextCompOut3",
+                "TextSimpIn2"
+            ],
+            "results": [
+                {
+                    "epoch": 1,
+                    "train_loss": [
+                        0.05351106286644072,
+                        0.5802798577777389,
+                        0.5950795241160391
+                    ],
+                    "val_loss": 0.019215615928987972,
+                    "srcc": 0.8833227522249294,
+                    "plcc": 0.882268790388707,
+                    "krcc": 0.7176611812248409
+                }
+            ]
+        },
+        "fold_2": {
+            "train_folders": [
+                "Animal1",
+                "Animal2",
+                "Animal3",
+                "Building1",
+                "Building2",
+                "CityStreetDay1",
+                "CityStreetDay2",
+                "Face1",
+                "Face5",
+                "Nature6",
+                "Nature9",
+                "People1",
+                "People4",
+                "People5",
+                "TextCompIn1",
+                "TextCompIn3",
+                "TextCompOut1",
+                "TextCompOut3",
+                "TextSimpIn2"
+            ],
+            "valid_folders": [
+                "Building5",
+                "CityStreetNight",
+                "Face3",
+                "Nature4",
+                "TextSimpOut2"
+            ],
+            "results": [
+                {
+                    "epoch": 1,
+                    "train_loss": [
+                        0.051268840596756876,
+                        0.5867480669344919,
+                        0.6052494023334438
+                    ],
+                    "val_loss": 0.019641195041820023,
+                    "srcc": 0.8708572194998969,
+                    "plcc": 0.872499084407768,
+                    "krcc": 0.6723803794675209
+                }
+            ]
+        },
+        "fold_3": {
+            "train_folders": [
+                "Animal2",
+                "Building1",
+                "Building2",
+                "Building5",
+                "CityStreetNight",
+                "Face1",
+                "Face3",
+                "Nature4",
+                "Nature6",
+                "Nature9",
+                "People1",
+                "People4",
+                "People5",
+                "TextCompIn1",
+                "TextCompIn3",
+                "TextCompOut1",
+                "TextCompOut3",
+                "TextSimpIn2",
+                "TextSimpOut2"
+            ],
+            "valid_folders": [
+                "Animal1",
+                "Animal3",
+                "CityStreetDay1",
+                "CityStreetDay2",
+                "Face5"
+            ],
+            "results": [
+                {
+                    "epoch": 1,
+                    "train_loss": [
+                        0.049250124563718994,
+                        0.604000891711126,
+                        0.6164857259687309
+                    ],
+                    "val_loss": 0.03520525001949863,
+                    "srcc": 0.7662829772543714,
+                    "plcc": 0.7875842912628286,
+                    "krcc": 0.5856502141581532
+                }
+            ]
+        },
+        "fold_4": {
+            "train_folders": [
+                "Animal1",
+                "Animal2",
+                "Animal3",
+                "Building2",
+                "Building5",
+                "CityStreetDay1",
+                "CityStreetDay2",
+                "CityStreetNight",
+                "Face3",
+                "Face5",
+                "Nature4",
+                "Nature6",
+                "Nature9",
+                "People4",
+                "People5",
+                "TextCompIn1",
+                "TextCompIn3",
+                "TextCompOut3",
+                "TextSimpIn2",
+                "TextSimpOut2"
+            ],
+            "valid_folders": [
+                "Building1",
+                "Face1",
+                "People1",
+                "TextCompOut1"
+            ],
+            "results": [
+                {
+                    "epoch": 1,
+                    "train_loss": [
+                        0.04429029365008662,
+                        0.626450456194618,
+                        0.6482375920923089
+                    ],
+                    "val_loss": 0.029116648249328136,
+                    "srcc": 0.8482073488741079,
+                    "plcc": 0.849215646643123,
+                    "krcc": 0.6663222321262072
+                }
+            ]
+        }
+    }
+}

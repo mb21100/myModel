@@ -11,6 +11,7 @@ from torch.utils.data import DataLoader
 from models.maniqa import MANIQA
 from config import Config
 from utils.process import RandCrop, ToTensor, RandHorizontalFlip, Normalize, five_point_crop
+from utils.inference_process import random_crop
 from scipy.stats import spearmanr, pearsonr
 from data.pipal21 import PIPAL21
 from torch.utils.tensorboard import SummaryWriter 
@@ -77,6 +78,7 @@ def train_epoch(epoch, net, criterion, optimizer, scheduler, train_loader):
     rho_p, _ = pearsonr(np.squeeze(pred_epoch), np.squeeze(labels_epoch))
 
     ret_loss = np.mean(losses)
+    print('Train Epoch: {} / Loss: {:.4f} / SRCC: {:.4f} / PLCC: {:.4f}'.format(epoch + 1, ret_loss, rho_s, rho_p))
     logging.info('train epoch:{} / loss:{:.4} / SRCC:{:.4} / PLCC:{:.4}'.format(epoch + 1, ret_loss, rho_s, rho_p))
 
     return ret_loss, rho_s, rho_p
@@ -97,7 +99,7 @@ def eval_epoch(config, epoch, net, criterion, test_loader):
                 x_d = data['d_img_org'].cuda()
                 labels = data['score']
                 labels = torch.squeeze(labels.type(torch.FloatTensor)).cuda()
-                x_d = five_point_crop(i, d_img=x_d, config=config)
+                x_d = random_crop(x_d, config)
                 pred += net(x_d)
 
             pred /= config.num_avg_val # 평균내기
@@ -151,14 +153,14 @@ if __name__ == '__main__':
         "val_txt_file_name": "./data/pipal21_val.txt",
 
         # optimization
-        "batch_size": 16,
+        "batch_size": 8,
         "learning_rate": 1e-5,
         "weight_decay": 1e-5,
-        "n_epoch": 300,
+        "n_epoch": 100,
         "val_freq": 1,
         "T_max": 50,
         "eta_min": 0,
-        "num_avg_val": 3,
+        "num_avg_val": 1,
         "crop_size": 224,
         "num_workers": 8,
 
@@ -239,18 +241,20 @@ if __name__ == '__main__':
         drop_last=True,
         shuffle=False
     )
-    # MANIQA 모델 생성 및 GPU에 올리기, DataParallel로 멀티-GPU 지원
+    # 모델 재초기화 (pre-trained model 로드)
+    #net = torch.load(config.model_path)
     net = MANIQA(
-        embed_dim=config.embed_dim,
-        num_outputs=config.num_outputs,
-        dim_mlp=config.dim_mlp,
-        patch_size=config.patch_size,
-        img_size=config.img_size,
-        window_size=config.window_size,
-        depths=config.depths,
-        num_heads=config.num_heads,
-        num_tab=config.num_tab,
-        scale=config.scale
+
+        num_outputs=1,
+
+        img_size=224,
+
+        drop=0.1,
+
+        hidden_dim=512,
+
+        fusion_type='concat'
+
     )
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     net = net.to(device)
@@ -293,13 +297,12 @@ if __name__ == '__main__':
             loss, rho_s, rho_p = eval_epoch(config, epoch, net, criterion, val_loader)
             logging.info('Eval done...')
 
-            if rho_s > best_srocc or rho_p > best_plcc:
-                best_srocc = rho_s
-                best_plcc = rho_p
-                # save weights
-                model_name = "epoch{}".format(epoch + 1)
-                model_save_path = os.path.join(config.snap_path, model_name)
-                torch.save(net, model_save_path)
-                logging.info('Saving weights and model of epoch{}, SRCC:{}, PLCC:{}'.format(epoch + 1, best_srocc, best_plcc))
-        
+        # 체크포인트 저장 (매 epoch마다)
+        checkpoint_path = os.path.join(
+            config["snap_path"],
+            f"{config['model_name']}_epoch{epoch+1}.pth"
+        )
+        torch.save(net.state_dict(), checkpoint_path)
+
+
         logging.info('Epoch {} done. Time: {:.2}min'.format(epoch + 1, (time.time() - start_time) / 60))

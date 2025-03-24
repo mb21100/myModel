@@ -4,12 +4,13 @@ import torch.nn.functional as F
 import timm
 from einops import rearrange
 
-class MANIQA(nn.Module):
+class MAXIQA(nn.Module):
     def __init__(self, num_outputs=1, img_size=224, drop=0.1, hidden_dim=512, **kwargs):
         super().__init__()
         # CoatNet-2 백본 생성 (features_only=True로 각 stage feature 추출)
         backbone_model = timm.create_model(
             'maxvit_rmlp_base_rw_224.sw_in12k_ft_in1k',
+            #'maxvit_small_tf_512',
             pretrained=True,
             features_only=True,
             out_indices=(1, 2, 3, 4)

@@ -13,8 +13,22 @@ from sklearn.model_selection import KFold  # 추가 for cross-validation
 from scipy.stats import spearmanr, pearsonr, kendalltau
 import torch.nn  # nn.DataParallel 사용 위해
 from utils.process import RandCrop, ToTensor, RandHorizontalFlip, Normalize, five_point_crop
-
+from models.maniqa import MANIQA
 #from multi_aug import MultiGeometricAug #### implement augmentation
+import torch.nn as nn
+
+def remove_module_prefix(state_dict, prefix="module.module."):
+    new_state_dict = {}
+    for key, value in state_dict.items():
+        if key.startswith(prefix):
+            new_key = key[len(prefix):]
+        else:
+            new_key = key
+        new_state_dict[new_key] = value
+    return new_state_dict
+
+
+
 
 # TransformWrapper 클래스는 변함 없이 사용
 class TransformWrapper(torch.utils.data.Dataset):
@@ -29,11 +43,17 @@ class TransformWrapper(torch.utils.data.Dataset):
     def __getitem__(self, idx):
         sample = self.dataset[idx]
         if self.transform:
-            sample = self.transform(sample)
+            transformed_sample = self.transform(sample)  # sample 전체를 전달
+            # transform 과정에서 일부 추가 정보가 누락될 수 있으므로 원래 sample의 d_name, score, subfolder를 보존
+            for key in ["d_name", "score", "subfolder"]:
+                if key not in transformed_sample:
+                    transformed_sample[key] = sample[key]
+            sample = transformed_sample
         return sample
 
     def __len__(self):
         return len(self.dataset)
+
 
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0'
@@ -48,89 +68,61 @@ def setup_seed(seed):
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.deterministic = True
 
-def train_epoch(config, epoch, net, criterion, optimizer, scheduler, train_loader):
+def train_epoch(config,epoch, net, criterion, optimizer, scheduler, train_loader):
     losses = []
-    net.train()  # 모델 학습 모드 전환
-
+    net.train()
+    # 에포크 동안 예측값과 라벨 저장 (평가용)
+    pred_epoch = []
+    labels_epoch = []
+    
     for data in tqdm(train_loader):
-        total_pred = 0
-        # 라벨은 배치마다 동일하므로 한 번만 처리
+        x_d = data['d_img_org'].cuda()  # 원본 이미지 (배치 전체)
         labels = data['score']
         labels = torch.squeeze(labels.type(torch.FloatTensor)).cuda()
-
-        # config.num_avg_val 만큼 (예: 5) 크롭을 추출하여 예측 수행 (평가와 동일한 방식)
+        
+        # 하나의 이미지에 대해 config.num_avg_val 만큼 랜덤 크롭을 추출하여 각 crop마다 업데이트
         for i in range(config.num_avg_val):
-            x_d = data['d_img_org'].cuda()  # 원본 이미지 (배치 전체)
-            # five_point_crop 함수를 사용하여 i번째 위치의 크롭을 추출
-            x_d_crop = random_crop(x_d,config)
-            pred = net(x_d_crop)  # 예측 결과 (B, output)
-            total_pred += pred
-
-        # 여러 크롭의 예측 평균을 최종 예측으로 사용
-        pred_d = total_pred / config.num_avg_val
-
-        optimizer.zero_grad()
-        loss = criterion(torch.squeeze(pred_d), labels)
-        losses.append(loss.item())
-
-        loss.backward()
-        optimizer.step()
-        scheduler.step()
-
-    return np.mean(losses)
-
-
-def train_epoch(config, epoch, net, criterion, optimizer, scheduler, train_loader):
-    losses = []
-    net.train()  # Switch model to training mode
-
-    for data in tqdm(train_loader):
-        total_pred = 0
-        # Process labels once per batch
-        images = data['d_img_org'].cuda()
-        labels = data['score']
-        labels = torch.squeeze(labels.type(torch.FloatTensor)).cuda()
-
-        # Extract config.num_avg_val random patches per sample
-        crop_list=[]
-        for i in range(config.num_avg_val):
-            crop = random_crop(images,config)
-            crop_list.append(crop)
-
-        crops = torch.cat(crop_list,dim=0)
-        labels_expanded = labels.repeat(config.num_avg_val)
-
-
-        optimizer.zero_grad()
-        preds = net(crops)
-        preds=torch.squeeze(preds)
-        loss = criterion(preds,labels_expanded)
-        losses.append(loss.item())
-
-        loss.backward()
-        optimizer.step()
-        scheduler.step()
-
-    return np.mean(losses)
-
-
-def eval_epoch(config, epoch, net, criterion, test_loader, log_f):
+            x_d_crop = random_crop(x_d, config)  # 랜덤 크롭 추출
+            pred = net(x_d_crop)  # crop에 대한 예측 (B, output)
+            
+            optimizer.zero_grad()
+            loss = criterion(torch.squeeze(pred), labels)
+            loss.backward()
+            optimizer.step()
+            scheduler.step()
+            
+            losses.append(loss.item())
+            
+            # 각 crop의 예측값과 라벨을 저장 (평가 시 여러 crop의 결과를 확인할 수 있음)
+            pred_batch_numpy = pred.data.cpu().numpy()
+            labels_batch_numpy = labels.data.cpu().numpy()
+            pred_epoch = np.append(pred_epoch, pred_batch_numpy)
+            labels_epoch = np.append(labels_epoch, labels_batch_numpy)
+    
+    # 에포크별 상관계수 계산
+    rho_s, _ = spearmanr(np.squeeze(pred_epoch), np.squeeze(labels_epoch))
+    rho_p, _ = pearsonr(np.squeeze(pred_epoch), np.squeeze(labels_epoch))
+    ret_loss = np.mean(losses)
+    #logging.info('train epoch:{} / loss:{:.4f} / SRCC:{:.4f} / PLCC:{:.4f}'.format(epoch + 1, ret_loss, rho_s, rho_p))
+    print('Train Epoch: {} / Loss: {:.4f} / SRCC: {:.4f} / PLCC: {:.4f}'.format(epoch + 1, ret_loss, rho_s, rho_p))
+    return ret_loss, rho_s, rho_p
+    
+def eval_epoch(config, iteration, fold, epoch, net, criterion, test_loader, log_f):
     with torch.no_grad():
         losses = []
         net.eval()  # 평가 모드 전환
         pred_epoch = []
         labels_epoch = []
-        file_name_list = []  # 각 샘플의 파일 이름을 저장
+        file_name_list = []  # 각 샘플의 파일 이름 저장
 
         for data in tqdm(test_loader):
             pred = 0
-            # 배치 내에서 파일 이름 가져오기 (d_name 키가 존재한다면)
             d_names = data.get('d_name', None)
             for i in range(config.num_avg_val):
                 x_d = data['d_img_org'].cuda()
                 labels = data['score']
                 labels = torch.squeeze(labels.type(torch.FloatTensor)).cuda()
-                x_d = random_crop(x_d,config)
+                x_d = random_crop(x_d, config)
                 pred += net(x_d)
             pred /= config.num_avg_val
             loss = criterion(torch.squeeze(pred), labels)
@@ -144,22 +136,68 @@ def eval_epoch(config, epoch, net, criterion, test_loader, log_f):
             if d_names is not None:
                 file_name_list.extend(d_names)
         
-        # 예측 결과를 파일에 저장
-        pred_log_file = os.path.join(config.log_path, f"predictions_epoch_{epoch+1}.txt")
+        # iteration, fold, epoch 정보를 포함한 예측 결과 저장 파일 생성
+        pred_log_file = os.path.join(config.log_path, f"iter_{iteration}_fold_{fold}_predictions_epoch_{epoch+1}.txt")
         with open(pred_log_file, "w") as fout:
-            for fname, pred_val in zip(file_name_list, pred_epoch):
-                fout.write(f"{fname}, {pred_val}\n")
+            for fname, pred_val, true_val in zip(file_name_list, pred_epoch, labels_epoch):
+                fout.write(f"{fname}, {pred_val}, {true_val}\n")
         
-        # log_f에도 기록
-        log_f.write(f"Epoch {epoch+1}: Predictions saved to {pred_log_file}\n")
+        log_f.write(f"Iteration {iteration}, Fold {fold}, Epoch {epoch+1}: Predictions saved to {pred_log_file}\n")
 
         # 상관계수 계산
         rho_s, _ = spearmanr(np.squeeze(pred_epoch), np.squeeze(labels_epoch))
         rho_p, _ = pearsonr(np.squeeze(pred_epoch), np.squeeze(labels_epoch))
         rho_k, _ = kendalltau(np.squeeze(pred_epoch), np.squeeze(labels_epoch))
         
-        print(f"Epoch:{epoch+1} ===== loss:{np.mean(losses):.4f} ===== SRCC:{rho_s:.4f} ===== PLCC:{rho_p:.4f}")
+        print(f"Iteration {iteration}, Fold {fold}, Epoch {epoch+1} ===== Loss: {np.mean(losses):.4f} ===== SRCC: {rho_s:.4f} ===== PLCC: {rho_p:.4f}")
         return np.mean(losses), rho_s, rho_p, rho_k
+
+# def eval_epoch(config, epoch, net, criterion, test_loader, log_f):
+#     with torch.no_grad():
+#         losses = []
+#         net.eval()  # 평가 모드 전환
+#         pred_epoch = []
+#         labels_epoch = []
+#         file_name_list = []  # 각 샘플의 파일 이름을 저장
+
+#         for data in tqdm(test_loader):
+#             pred = 0
+#             # 배치 내에서 파일 이름 가져오기 (d_name 키가 존재한다면)
+#             d_names = data.get('d_name', None)
+#             for i in range(config.num_avg_val):
+#                 x_d = data['d_img_org'].cuda()
+#                 labels = data['score']
+#                 labels = torch.squeeze(labels.type(torch.FloatTensor)).cuda()
+#                 x_d = random_crop(x_d,config)
+#                 pred += net(x_d)
+#             pred /= config.num_avg_val
+#             loss = criterion(torch.squeeze(pred), labels)
+#             losses.append(loss.item())
+
+#             pred_batch_numpy = pred.data.cpu().numpy()
+#             labels_batch_numpy = labels.data.cpu().numpy()
+#             pred_epoch = np.append(pred_epoch, pred_batch_numpy)
+#             labels_epoch = np.append(labels_epoch, labels_batch_numpy)
+
+#             if d_names is not None:
+#                 file_name_list.extend(d_names)
+        
+#         # 예측 결과를 파일에 저장
+#         pred_log_file = os.path.join(config.log_path, f"predictions_epoch_{epoch+1}.txt")
+#         with open(pred_log_file, "w") as fout:
+#             for fname, pred_val in zip(file_name_list, pred_epoch):
+#                 fout.write(f"{fname}, {pred_val}\n")
+        
+#         # log_f에도 기록
+#         log_f.write(f"Epoch {epoch+1}: Predictions saved to {pred_log_file}\n")
+
+#         # 상관계수 계산
+#         rho_s, _ = spearmanr(np.squeeze(pred_epoch), np.squeeze(labels_epoch))
+#         rho_p, _ = pearsonr(np.squeeze(pred_epoch), np.squeeze(labels_epoch))
+#         rho_k, _ = kendalltau(np.squeeze(pred_epoch), np.squeeze(labels_epoch))
+        
+#         print(f"Epoch:{epoch+1} ===== loss:{np.mean(losses):.4f} ===== SRCC:{rho_s:.4f} ===== PLCC:{rho_p:.4f}")
+#         return np.mean(losses), rho_s, rho_p, rho_k
 
 
 if __name__ == '__main__':
@@ -183,14 +221,14 @@ if __name__ == '__main__':
 
         # optimization
         "batch_size": 4, # for gpu // how many images data loader will bring at one time
-        "learning_rate": 2e-5,
-        "num_avg_val": 25, #25
+        "learning_rate": 1e-6, #2e-5
+        "num_avg_val": 45, #25
         "crop_size": 224,
         "n_iteration": 1,
-        "weight_decay": 1e-4,
+        "weight_decay":  1e-4, #1e-4
         "val_freq": 1,
-        "T_max": 50,
-        "eta_min": 0,
+        "T_max": 50, #100
+        "eta_min": 1e-7,
         "num_workers": 8,
 
         # model 관련
@@ -204,16 +242,17 @@ if __name__ == '__main__':
         "num_outputs": 1,
         "num_tab": 2,
         "scale": 0.1,
-        "n_epoch_fold": 1,
+        "n_epoch_fold": 25, #5
 
         # load & save checkpoint, 로그, 텐서보드 등
-        "model_path": "./epoch3",  # in 5 epochs, epoch3 has the best performance on plcc and srcc.
-        "model_name": "model_maniqa_sr4kiqa",
-        "output_path": "./output/sr4kiqa/",
-        "snap_path": "./output/models/sr4kiqa",       # checkpoint 저장 폴더
-        "log_path": "./output/log/sr4kiqa/",
+        #"model_path": "./epoch3",  # in 5 epochs, epoch3 has the best performance on plcc and srcc.
+        "model_name": "model_maniqa_sr4kiqa2",
+        "output_path": "./output/sr4kiqa2/",
+        "snap_path": "./output/models/sr4kiqa2",       # checkpoint 저장 폴더
+        "log_path": "./output/log/sr4kiqa2/",
         "log_file": "sr4kiqa_log.txt",
-        "tensorboard_path": "./output/tensorboard/sr4kiqa"
+        "tensorboard_path": "./output/tensorboard/sr4kiqa2"
+        
     })
     os.makedirs(config["snap_path"], exist_ok=True)
     os.makedirs(config["log_path"], exist_ok=True)
@@ -267,8 +306,27 @@ if __name__ == '__main__':
 
 
             # 모델 재초기화 (pre-trained model 로드)
-            net = torch.load(config.model_path)
+            #net = torch.load(config.model_path)
+            net = MANIQA(
 
+                num_outputs=1,
+
+                img_size=224,
+
+                drop=0.1,
+
+                hidden_dim=512,
+
+                fusion_type='concat'
+
+            )
+            # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            # net = net.to(device)
+
+            state_dict = torch.load("./output/models/model_maniqa_pipal_ver1/model_maniqa_pipal_epoch43.pth", map_location=torch.device("cuda"))
+            state_dict = remove_module_prefix(state_dict, prefix="module.")
+            net.load_state_dict(state_dict)
+            net = net.cuda()
             # # DataParallel 여부 확인 후, 실제 모델에 접근
             # if isinstance(net, torch.nn.DataParallel):
             #     base_model = net.module  # net.module이 실제 모델(MANIQA)
@@ -362,13 +420,16 @@ if __name__ == '__main__':
                 train_loss = train_epoch(config,epoch, net, criterion, optimizer, scheduler, train_loader)
                 #print("finish training")
                 # (b) 검증
-                val_loss, srcc, plcc, krcc = eval_epoch(config, epoch, net, criterion, eval_loader,log_f)
+                val_loss, srcc, plcc, krcc = eval_epoch(config, iteration, fold, epoch, net, criterion, eval_loader, log_f)
                 #print("finish evaluating")
-                log_msg = f"Iteration {iteration}, Fold {fold}, Epoch {epoch+1}/{config['n_epoch_fold']} - " \
-                          f"Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}, " \
-                          f"SRCC: {srcc:.4f}, PLCC: {plcc:.4f}, KRCC: {krcc:.4f}\n"
-                print(log_msg)
-                log_f.write(log_msg)
+
+                # log_msg = f"Iteration {iteration}, Fold {fold}, Epoch {epoch+1}/{config['n_epoch_fold']} - " \
+                #           f"Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}, " \
+                #           f"SRCC: {srcc:.4f}, PLCC: {plcc:.4f}, KRCC: {krcc:.4f}\n"
+
+                #print(log_msg)
+                #log_f.write(log_msg)
+
                 epoch_result = {
                     "epoch": epoch + 1,
                     "train_loss": train_loss,

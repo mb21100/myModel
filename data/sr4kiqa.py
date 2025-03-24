@@ -20,11 +20,11 @@ class SR4KIQA(torch.utils.data.Dataset):
                 dis = dis.strip()
                 score = float(score.strip())
                 dis_files_data.append(dis)
-                score_data.append(score)
+                score_data.append(x)
 
         # reshape score_list (1xn -> nx1)
         score_data = np.array(score_data)
-        score_data = self.normalization(score_data)
+        #score_data = self.normalization(score_data)
         score_data = score_data.astype('float').reshape(-1, 1)
 
         self.data_dict = {'d_img_list': dis_files_data, 'score_list': score_data}

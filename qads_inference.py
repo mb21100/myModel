@@ -7,7 +7,7 @@ import random
 from torchvision import transforms
 from torch.utils.data import DataLoader
 from config import Config
-from utils.inference_process import ToTensor, Normalize, five_point_crop, sort_file
+from utils.inference_process import ToTensor, Normalize, five_point_crop, sort_file,random_crop
 from data.qads import QADS
 from tqdm import tqdm
 from scipy.stats import spearmanr, pearsonr, kendalltau
@@ -49,7 +49,7 @@ def eval_epoch(config, net, test_loader):
                 pred = 0
                 for i in range(config.num_avg_val):
                     x_d = data['d_img_org'].cuda()
-                    x_d = five_point_crop(i, d_img=x_d, config=config)
+                    x_d = random_crop(x_d, config)
                     pred += net(x_d)
 
                 pred /= config.num_avg_val
@@ -84,7 +84,7 @@ if __name__ == '__main__':
         
         # optimization
         "batch_size": 10,
-        "num_avg_val": 1,
+        "num_avg_val": 15,
         "crop_size": 224, #512
 
         # optimization
@@ -114,7 +114,7 @@ if __name__ == '__main__':
         "valid": "./output/eval",
         "valid_path": "./output/valid/qads_inference_eval",
         #"model_path": "./output/models/model_maniqa_pipal/epoch3" # epoch 에서 가장 좋은 성능을 만든 epoch 번호로 수정 ##### 여기 수정하고 돌리기기
-        "model_path": "./output/models/sr4kiqa/model_maniqa_sr4kiqa_iter0_fold0_epoch1.pth"
+        "model_path": "./output/models/model_maniqa_pipal/model_maniqa_pipal_epoch43.pth"
         # 이 모델은 PIPAL21 로 훈련한 모델에다가, SR4KIQA 로 fine-tuning 한 후에 사용.
     })
 
