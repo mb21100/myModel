@@ -18,6 +18,18 @@ from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
 
+def remove_module_prefix(state_dict, prefix="module.module."):
+    new_state_dict = {}
+    for key, value in state_dict.items():
+        if key.startswith(prefix):
+            new_key = key[len(prefix):]
+        else:
+            new_key = key
+        new_state_dict[new_key] = value
+    return new_state_dict
+
+
+
 
 
 # 랜덤 시드 고정정
@@ -178,11 +190,11 @@ if __name__ == '__main__':
         
         # load & save checkpoint
         "model_name": "model_maniqa_pipal",
-        "output_path": "./output",
-        "snap_path": "./output/models/",               # directory for saving checkpoint
-        "log_path": "./output/log/maniqa/",
+        "output_path": "./output2",
+        "snap_path": "./output2/models/",               # directory for saving checkpoint
+        "log_path": "./output2/log/maniqa/",
         "log_file": ".txt",
-        "tensorboard_path": "./output/tensorboard/"
+        "tensorboard_path": "./output2/tensorboard/"
     })
 
     # 경로가 없으면 새로 생성
@@ -249,7 +261,7 @@ if __name__ == '__main__':
 
         img_size=224,
 
-        drop=0.1,
+        drop=0.3,
 
         hidden_dim=512,
 

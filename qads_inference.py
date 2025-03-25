@@ -114,7 +114,9 @@ if __name__ == '__main__':
         "valid": "./output/eval",
         "valid_path": "./output/valid/qads_inference_eval",
         #"model_path": "./output/models/model_maniqa_pipal/epoch3" # epoch 에서 가장 좋은 성능을 만든 epoch 번호로 수정 ##### 여기 수정하고 돌리기기
-        "model_path": "./output/models/model_maniqa_pipal/model_maniqa_pipal_epoch43.pth"
+        #"model_path": "./output/models/model_maniqa_pipal/model_maniqa_pipal_epoch43.pth"
+        "model_path": "./output2/models/model_maniqa_pipal/model_maniqa_pipal_epoch29.pth"
+
         # 이 모델은 PIPAL21 로 훈련한 모델에다가, SR4KIQA 로 fine-tuning 한 후에 사용.
     })
 
@@ -141,22 +143,23 @@ if __name__ == '__main__':
 
     #MANIQA 모델 생성 및 GPU에 올리기, DataParallel로 멀티-GPU 지원
     net = MANIQA(
-        embed_dim=config.embed_dim,
-        num_outputs=config.num_outputs,
-        dim_mlp=config.dim_mlp,
-        patch_size=config.patch_size,
-        img_size=config.img_size,
-        window_size=config.window_size,
-        depths=config.depths,
-        num_heads=config.num_heads,
-        num_tab=config.num_tab,
-        scale=config.scale
+
+        num_outputs=1,
+
+        img_size=224,
+
+        drop=0.3,
+
+        hidden_dim=512,
+
+        fusion_type='concat'
+
     )
 
     state_dict = torch.load(config.model_path, map_location=torch.device("cuda"))
     state_dict = remove_module_prefix(state_dict, prefix="module.")
     net.load_state_dict(state_dict)
-    net = net.cuda()
+
 
     # net = torch.load(config.model_path)
     # net = net.cuda()

@@ -2,8 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import timm
-import pywt
 from thop import profile  # pip install thop
+import pywt  # pip install PyWavelets
 
 # FPN: multi-scale feature fusion
 class FPN(nn.Module):
@@ -89,42 +89,9 @@ class FusionModule(nn.Module):
         x = self.act(x)
         return self.cbam(x)
 
-# Cross-Attention Fusion Module
-class CrossAttentionFusion(nn.Module):
-    def __init__(self, hidden_dim, num_tokens=4, num_heads=4):
-        """
-        hidden_dim: 최종 기본 branch feature 차원 (예: 512)
-        num_tokens: feature vector를 분할할 토큰 수 (hidden_dim이 num_tokens로 나누어 떨어져야 함)
-        num_heads: MultiheadAttention의 head 수
-        """
-        super().__init__()
-        self.num_tokens = num_tokens
-        assert hidden_dim % num_tokens == 0, "hidden_dim must be divisible by num_tokens"
-        self.token_dim = hidden_dim // num_tokens
-        self.mha = nn.MultiheadAttention(embed_dim=self.token_dim, num_heads=num_heads)
-        self.out_proj = nn.Linear(hidden_dim, hidden_dim)
-    
-    def forward(self, basic_feat, wavelet_feat):
-        # basic_feat: (B, hidden_dim)
-        # wavelet_feat: (B, hidden_dim) (projected to same dimension)
-        B = basic_feat.size(0)
-        # Reshape to (B, num_tokens, token_dim)
-        basic_tokens = basic_feat.view(B, self.num_tokens, self.token_dim)
-        wavelet_tokens = wavelet_feat.view(B, self.num_tokens, self.token_dim)
-        # Transpose to (num_tokens, B, token_dim) as required by nn.MultiheadAttention
-        basic_tokens = basic_tokens.transpose(0, 1)
-        wavelet_tokens = wavelet_tokens.transpose(0, 1)
-        # Cross-attention: basic as query, wavelet as key/value
-        attn_output, _ = self.mha(basic_tokens, wavelet_tokens, wavelet_tokens)
-        # Transpose back and flatten: (B, num_tokens, token_dim) -> (B, hidden_dim)
-        attn_output = attn_output.transpose(0, 1).contiguous().view(B, -1)
-        # Optionally project fused feature
-        fused = self.out_proj(attn_output)
-        return fused
-
-# MANIQA_Wavelet with Cross-Attention Fusion
+# MANIQA_Wavelet: 기본 branch + 별도의 wavelet branch 후 fusion
 class MANIQA(nn.Module):
-    def __init__(self, num_outputs=1, img_size=224, drop=0.1, hidden_dim=512, num_tokens=4, **kwargs):
+    def __init__(self, num_outputs=1, img_size=224, drop=0.3, hidden_dim=512, **kwargs):
         super().__init__()
         fpn_out_channels = 256
         # 기본 branch: MaxViT backbone 사용 (features_only=True)
@@ -171,13 +138,9 @@ class MANIQA(nn.Module):
             nn.ReLU(),
             nn.Dropout(drop)
         )
-        # 프로젝트: wavelet branch를 hidden_dim으로 맞춤
-        self.wavelet_proj = nn.Linear(hidden_dim // 2, hidden_dim)
-        # Cross-Attention Fusion: 기본 feature와 wavelet feature를 융합
-        self.cross_attn = CrossAttentionFusion(hidden_dim, num_tokens=num_tokens, num_heads=4)
-        # Fusion head: cross-attended feature를 통해 최종 score 예측
+        # Fusion head: 두 branch feature 결합 후 최종 score 예측
         self.fusion_head = nn.Sequential(
-            nn.Linear(hidden_dim, hidden_dim),
+            nn.Linear(hidden_dim + hidden_dim // 2, hidden_dim),
             nn.BatchNorm1d(hidden_dim),
             nn.ReLU(),
             nn.Dropout(drop),
@@ -226,7 +189,7 @@ class MANIQA(nn.Module):
         fused_fpn_feature = torch.cat(upsampled_features, dim=1)
         pooled_feature = self.global_pool(fused_fpn_feature)
         flattened_feature = pooled_feature.view(pooled_feature.size(0), -1)
-        basic_feature = self.mlp_basic(flattened_feature)  # (B, hidden_dim)
+        basic_feature = self.mlp_basic(flattened_feature)
         
         # Wavelet branch
         # Convert RGB to grayscale using standard luminance weights
@@ -240,19 +203,16 @@ class MANIQA(nn.Module):
             ll_list.append(torch.tensor(LL, dtype=x.dtype, device=x.device))
         ll_tensor = torch.stack(ll_list).unsqueeze(1)  # (B, 1, H/2, W/2)
         ll_flat = ll_tensor.view(B, -1)
-        wavelet_feature = self.wavelet_linear(ll_flat)  # (B, hidden_dim//2)
-        wavelet_feature = self.wavelet_proj(wavelet_feature)  # (B, hidden_dim)
+        wavelet_feature = self.wavelet_linear(ll_flat)
         
-        # Cross-Attention Fusion: 기본 branch feature와 wavelet branch feature 융합
-        fused_feature = self.cross_attn(basic_feature, wavelet_feature)  # (B, hidden_dim)
-        
-        # Fusion head를 통해 최종 점수 예측
+        # Fusion: concatenate basic and wavelet features and predict score
+        fused_feature = torch.cat([basic_feature, wavelet_feature], dim=1)
         score = self.fusion_head(fused_feature).squeeze(-1)
         return torch.sigmoid(score)
 
 # 테스트 예시
 if __name__ == "__main__":
-    model = MANIQA(num_outputs=1, img_size=224, drop=0.3, hidden_dim=512, num_tokens=4)
+    model = MANIQA(num_outputs=1, img_size=224, drop=0.3, hidden_dim=512)
     model.eval()
     dummy_input = torch.randn(1, 3, 224, 224)
     with torch.no_grad():

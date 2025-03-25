@@ -6,6 +6,7 @@ Dis/
 *.pt
 
 output/
+output2/
 
 test_images/
 
