@@ -152,54 +152,6 @@ def eval_epoch(config, iteration, fold, epoch, net, criterion, test_loader, log_
         print(f"Iteration {iteration}, Fold {fold}, Epoch {epoch+1} ===== Loss: {np.mean(losses):.4f} ===== SRCC: {rho_s:.4f} ===== PLCC: {rho_p:.4f}")
         return np.mean(losses), rho_s, rho_p, rho_k
 
-# def eval_epoch(config, epoch, net, criterion, test_loader, log_f):
-#     with torch.no_grad():
-#         losses = []
-#         net.eval()  # 평가 모드 전환
-#         pred_epoch = []
-#         labels_epoch = []
-#         file_name_list = []  # 각 샘플의 파일 이름을 저장
-
-#         for data in tqdm(test_loader):
-#             pred = 0
-#             # 배치 내에서 파일 이름 가져오기 (d_name 키가 존재한다면)
-#             d_names = data.get('d_name', None)
-#             for i in range(config.num_avg_val):
-#                 x_d = data['d_img_org'].cuda()
-#                 labels = data['score']
-#                 labels = torch.squeeze(labels.type(torch.FloatTensor)).cuda()
-#                 x_d = random_crop(x_d,config)
-#                 pred += net(x_d)
-#             pred /= config.num_avg_val
-#             loss = criterion(torch.squeeze(pred), labels)
-#             losses.append(loss.item())
-
-#             pred_batch_numpy = pred.data.cpu().numpy()
-#             labels_batch_numpy = labels.data.cpu().numpy()
-#             pred_epoch = np.append(pred_epoch, pred_batch_numpy)
-#             labels_epoch = np.append(labels_epoch, labels_batch_numpy)
-
-#             if d_names is not None:
-#                 file_name_list.extend(d_names)
-        
-#         # 예측 결과를 파일에 저장
-#         pred_log_file = os.path.join(config.log_path, f"predictions_epoch_{epoch+1}.txt")
-#         with open(pred_log_file, "w") as fout:
-#             for fname, pred_val in zip(file_name_list, pred_epoch):
-#                 fout.write(f"{fname}, {pred_val}\n")
-        
-#         # log_f에도 기록
-#         log_f.write(f"Epoch {epoch+1}: Predictions saved to {pred_log_file}\n")
-
-#         # 상관계수 계산
-#         rho_s, _ = spearmanr(np.squeeze(pred_epoch), np.squeeze(labels_epoch))
-#         rho_p, _ = pearsonr(np.squeeze(pred_epoch), np.squeeze(labels_epoch))
-#         rho_k, _ = kendalltau(np.squeeze(pred_epoch), np.squeeze(labels_epoch))
-        
-#         print(f"Epoch:{epoch+1} ===== loss:{np.mean(losses):.4f} ===== SRCC:{rho_s:.4f} ===== PLCC:{rho_p:.4f}")
-#         return np.mean(losses), rho_s, rho_p, rho_k
-
-
 if __name__ == '__main__':
     cpu_num = 1
     os.environ['OMP_NUM_THREADS'] = str(cpu_num)
@@ -247,11 +199,11 @@ if __name__ == '__main__':
         # load & save checkpoint, 로그, 텐서보드 등
         #"model_path": "./epoch3",  # in 5 epochs, epoch3 has the best performance on plcc and srcc.
         "model_name": "model_maniqa_sr4kiqa2",
-        "output_path": "./output/sr4kiqa2/",
-        "snap_path": "./output/models/sr4kiqa2",       # checkpoint 저장 폴더
-        "log_path": "./output/log/sr4kiqa2/",
+        "output_path": "./output3/sr4kiqa2/",
+        "snap_path": "./output3/models/sr4kiqa2",       # checkpoint 저장 폴더
+        "log_path": "./output3/log/sr4kiqa2/",
         "log_file": "sr4kiqa_log.txt",
-        "tensorboard_path": "./output/tensorboard/sr4kiqa2"
+        "tensorboard_path": "./output3/tensorboard/sr4kiqa2"
         
     })
     os.makedirs(config["snap_path"], exist_ok=True)
@@ -315,15 +267,13 @@ if __name__ == '__main__':
 
                 drop=0.1,
 
-                hidden_dim=512,
-
-                fusion_type='concat'
+                hidden_dim=768,
 
             )
             # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
             # net = net.to(device)
 
-            state_dict = torch.load("./output/models/model_maniqa_pipal_ver1/model_maniqa_pipal_epoch43.pth", map_location=torch.device("cuda"))
+            state_dict = torch.load("./output2/models/model_maniqa_pipal/model_maniqa_pipal_epoch35.pth", map_location=torch.device("cuda"))
             state_dict = remove_module_prefix(state_dict, prefix="module.")
             net.load_state_dict(state_dict)
             net = net.cuda()
@@ -381,7 +331,6 @@ if __name__ == '__main__':
             train_dataset_with_transform = TransformWrapper(
                 train_subset,
                 transform=transforms.Compose([
-                    #MultiGeometricAug(num_aug=5, crop_size=config.crop_size), ## implement it
                     Normalize(0.5, 0.5),
                     RandHorizontalFlip(),
                     ToTensor()

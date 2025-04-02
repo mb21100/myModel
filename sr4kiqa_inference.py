@@ -8,7 +8,7 @@ from torchvision import transforms
 from torch.utils.data import DataLoader
 from config import Config
 from utils.inference_process import ToTensor, Normalize, five_point_crop, sort_file,random_crop
-from data.qads import QADS
+from data.sr4kiqa2 import SR4KIQA2
 from tqdm import tqdm
 from scipy.stats import spearmanr, pearsonr, kendalltau
 from models.maniqa import MANIQA
@@ -77,33 +77,32 @@ if __name__ == '__main__':
     # config file
     config = Config({
         # dataset path
-        "db_name": "QADS",  # 이번엔 PIPAL22 데이터셋
-        "data_path": "/home/mb21100/data/QADS/super-resolved_images",  # 데이터 경로 (예시)
-        "txt_file_name": "/home/mb21100/data/QADS/mos_with_names2.txt",
+        "db_name": "SR4KIQA",  # 이번엔 PIPAL22 데이터셋
+        "data_path": "/home/mb21100/data/SR4KIQA_inference",  # 데이터 경로 (예시)
+        "txt_file_name": "/home/mb21100/data/SR4KIQA/MOS.csv",
         
         
         # optimization
-        "batch_size": 10,
-        "num_avg_val": 5,
+        "batch_size": 8,
+        "num_avg_val": 15,
         "crop_size": 224, #512
 
+
+
         # device
-        "num_workers": 8,
+        "num_workers": 2,
 
         # load & save checkpoint
         "valid": "./output/eval",
-        "valid_path": "./output/valid/qads_inference_eval",
-        #"model_path": "./output/models/model_maniqa_pipal/epoch3" # epoch 에서 가장 좋은 성능을 만든 epoch 번호로 수정 ##### 여기 수정하고 돌리기기
-        #"model_path": "./output/models/model_maniqa_pipal/model_maniqa_pipal_epoch43.pth"
-        # "model_path": "./output2/models/model_maniqa_pipal/model_maniqa_pipal_epoch35.pth" # hidden_dim = 768 / SRCC: 0.8799 PLCC: 0.8753
-        #"model_path": "./output4/models/model_maniqa_pipal/model_maniqa_pipal_epoch45.pth" #SRCC: 0.8633 PLCC: 0.8556
-        #"model_path": "./output5/models/model_maniqa_pipal/model_maniqa_pipal_epoch13.pth"  # SRCC: 0.8669 PLCC: 0.8607
-        #"model_path": "./output6/models/model_maniqa_pipal2/model_maniqa_pipal_epoch45.pth" #SRCC: 0.8642 PLCC: 0.8618
-        #"model_path": "./output7/models/model_maniqa_pipal/model_maniqa_pipal_epoch40.pth" # SRCC: 0.8336 PLCC: 0.8292
-        #"model_path": "./output7/models/model_maniqa_pipal0/model_maniqa_pipal_epoch5.pth" #SRCC: 0.8693 PLCC: 0.8657
-        #"model_path": "./output7/models/model_maniqa_pipal1/model_maniqa_pipal_epoch5.pth" #SRCC: 0.8749 PLCC: 0.8693
-        "model_path": "./output7/models/model_maniqa_pipal/model_maniqa_pipal_epoch5.pth" #SRCC: 0.8736 PLCC: 0.8685
+        "valid_path": "./output/valid/sr4kiqa_inference_eval",
+        
+        # "model_path": "./output2/models/model_maniqa_pipal/model_maniqa_pipal_epoch35.pth" # hidden_dim = 768 / SRCC: 0.6674 PLCC: 0.6527
+        #"model_path": "./output5/models/model_maniqa_pipal/model_maniqa_pipal_epoch13.pth" # SRCC: 0.7264 PLCC: 0.7130
         # 이 모델은 PIPAL21 로 훈련한 모델에다가, SR4KIQA 로 fine-tuning 한 후에 사용.
+        #"model_path": "./output6/models/model_maniqa_pipal/model_maniqa_pipal_epoch30.pth" #SRCC: 0.6187 PLCC: 0.5653
+        #"model_path": "./output7/models/model_maniqa_pipal/model_maniqa_pipal_epoch35.pth" # SRCC: 0.5944 PLCC: 0.5520
+        #"model_path": "./output7/models/model_maniqa_pipal0/model_maniqa_pipal_epoch5.pth" # SRCC: 0.7075 PLCC: 0.7012
+        "model_path": "./output7/models/model_maniqa_pipal/model_maniqa_pipal_epoch7.pth" # SRCC: 0.6984 PLCC: 0.6876
     })
 
     if not os.path.exists(config.valid):
@@ -114,7 +113,7 @@ if __name__ == '__main__':
 
     
     # data load
-    test_dataset = QADS(
+    test_dataset = SR4KIQA2(
         dis_path=config.data_path,
         txt_file_name = config.txt_file_name, # 나중에 srcc,krcc,plcc 구할 때 사용하자자
         transform=transforms.Compose([Normalize(0.5, 0.5), ToTensor()]),
@@ -153,14 +152,14 @@ if __name__ == '__main__':
     eval_epoch(config, net, test_loader)
     sort_file(config.valid_path + '/output.txt')
 
-    df_gt = pd.read_csv("/home/mb21100/data/QADS/mos_with_names2.txt",
-                    names=['filename','gt'],
+    df_gt = pd.read_csv("/home/mb21100/data/SR4KIQA/MOS.csv",
+                    names=['filename','gt','gt2'],
                     sep=',', header=None)
     # 혹시 파일명 끝에 공백이 있을 수 있으니 .strip()
     df_gt['filename'] = df_gt['filename'].str.strip()
 
     # 2) 모델 예측값 불러오기
-    df_pred = pd.read_csv("./output/valid/qads_inference_eval/output.txt",
+    df_pred = pd.read_csv("./output/valid/sr4kiqa_inference_eval/output.txt",
                         names=['filename','pred'],
                         sep=',', header=None)
     df_pred['filename'] = df_pred['filename'].str.strip()

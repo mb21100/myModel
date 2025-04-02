@@ -171,6 +171,28 @@ class RandHorizontalFlip(object):
         }
         return sample
 
+class RandFlip(object):
+    def __init__(self):
+        pass
+    
+    def __call__(self, sample):
+        d_img = sample['d_img_org']
+        score = sample['score']
+        prob_lr = np.random.random()
+        prob_ud = np.random.random()
+        # np.flipud needs HxWxC
+        if prob_ud > 0.5 :
+            d_img = np.flipud(d_img).copy()
+        
+        if prob_lr > 0.5:
+            d_img = np.fliplr(d_img).copy()
+        
+        sample = {
+            'd_img_org': d_img,
+            'score': score
+        }
+        return sample
+
 
 class ToTensor(object):
     def __init__(self):

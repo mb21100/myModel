@@ -17,7 +17,6 @@ from data.pipal21 import PIPAL21
 from torch.utils.tensorboard import SummaryWriter 
 from tqdm import tqdm
 import torch.optim as optim
-import math
 
 
 def remove_module_prefix(state_dict, prefix="module.module."):
@@ -113,7 +112,7 @@ def eval_epoch(config, epoch, net, criterion, test_loader):
                 x_d = data['d_img_org'].cuda()
                 labels = data['score']
                 labels = torch.squeeze(labels.type(torch.FloatTensor)).cuda()
-                x_d = five_point_crop(i, d_img=x_d, config=config)
+                x_d = x_d = five_point_crop(i, d_img=x_d, config=config)
                 pred += net(x_d)
 
             pred /= 5 # 평균내기
@@ -159,24 +158,24 @@ if __name__ == '__main__':
         "val_txt_file_name": "./data/pipal21_val.txt",
 
         # optimization
-        "batch_size": 18,
+        "batch_size": 16,
         "learning_rate": 1e-5,
-        "weight_decay": 3e-5, # 2e-4
-        "n_epoch": 40,
+        "weight_decay": 2e-4, # 2e-4
+        "n_epoch": 60,
         "val_freq": 1,
-        "T_max": 20,
+        "T_max": 60,
         "eta_min": 0,
         "num_avg_val": 5,
         "crop_size": 224,
-        "num_workers": 16,
+        "num_workers": 8,
 
         # load & save checkpoint
         "model_name": "model_maniqa_pipal",
-        "output_path": "./output7",
-        "snap_path": "./output7/models/",               # directory for saving checkpoint
-        "log_path": "./output7/log/maniqa/",
+        "output_path": "./output4",
+        "snap_path": "./output4/models/",               # directory for saving checkpoint
+        "log_path": "./output4/log/maniqa/",
         "log_file": ".txt",
-        "tensorboard_path": "./output7/tensorboard/"
+        "tensorboard_path": "./output4/tensorboard/"
     })
 
     # 경로가 없으면 새로 생성
@@ -251,20 +250,25 @@ if __name__ == '__main__':
     )
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     net = net.to(device)
-
+    net = nn.DataParallel(net)
 
     # loss function
     # 손실 함수, 옵티마이저, 스케줄러 설정
     criterion = torch.nn.MSELoss()
 
- 
-    # 전체 스텝 수 계산 (한 에폭당 iteration 수 * 전체 에폭 수)
-    total_steps = len(train_loader) * config.n_epoch  
-    warmup_steps = int(total_steps * 0.1)  # 전체 스텝의 10%를 warm-up으로 사용
+    # 옵티마이저: AdamW 사용
+    optimizer = optim.AdamW(
+        net.parameters(),
+        lr=config.learning_rate,
+        weight_decay=config.weight_decay
+    )
 
-    optimizer = optim.AdamW(net.parameters(), lr=config.learning_rate, weight_decay=config.weight_decay)
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=config.T_max, eta_min=config.eta_min)
-
+    # 스케줄러: Cosine Annealing
+    scheduler = optim.lr_scheduler.CosineAnnealingLR(
+        optimizer, 
+        T_max=config.T_max, 
+        eta_min=config.eta_min
+    )
 
     # make directory for saving weights
     # 체크포인트 저장 디렉토리 생성
@@ -279,20 +283,6 @@ if __name__ == '__main__':
 
     # 300 번 epoch 반복
     for epoch in range(0, config.n_epoch):
-        # def freeze_backbone(model):
-        #     for param in model.module.backbone.parameters():
-        #         param.requires_grad = False
-
-        # def unfreeze_backbone(model):
-        #     for param in model.module.backbone.parameters():
-        #         param.requires_grad = True
-
-        # # 초기 15 에폭 동안 freeze
-        # if epoch < 2:
-        #     freeze_backbone(net)
-        # else:
-        #     unfreeze_backbone(net)
-
         start_time = time.time()
         logging.info('Running training epoch {}'.format(epoch + 1))
         loss_val, rho_s, rho_p = train_epoch(epoch, net, criterion, optimizer, scheduler, train_loader)

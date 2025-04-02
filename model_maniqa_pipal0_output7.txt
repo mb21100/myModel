@@ -1,0 +1,56 @@
+[20250402 11:11:05 INFO    ] {'db_name': 'PIPAL', 'train_dis_path': '/home/mb21100/data/PIPAL/Train_Distort/', 'val_dis_path': '/home/mb21100/data/PIPAL/Val_Distort/', 'train_txt_file_name': './data/pipal21_train.txt', 'val_txt_file_name': './data/pipal21_val.txt', 'batch_size': 16, 'learning_rate': 1e-05, 'weight_decay': 1e-05, 'n_epoch': 60, 'val_freq': 1, 'T_max': 60, 'eta_min': 0, 'num_avg_val': 5, 'crop_size': 224, 'num_workers': 16, 'model_name': 'model_maniqa_pipal', 'output_path': './output7', 'snap_path': './output7/models/model_maniqa_pipal', 'log_path': './output7/log/maniqa/', 'log_file': 'model_maniqa_pipal.txt', 'tensorboard_path': './output7/tensorboard/model_maniqa_pipal'}
+[20250402 11:11:05 INFO    ] number of train scenes: 23200
+[20250402 11:11:05 INFO    ] number of val scenes: 1000
+[20250402 11:11:06 INFO    ] Loading pretrained weights from Hugging Face hub (timm/maxvit_rmlp_base_rw_224.sw_in12k_ft_in1k)
+[20250402 11:11:06 INFO    ] [timm/maxvit_rmlp_base_rw_224.sw_in12k_ft_in1k] Safe alternative available for 'pytorch_model.bin' (as 'model.safetensors'). Loading weights using safetensors.
+[20250402 11:11:07 INFO    ] Missing keys (head.fc.weight, head.fc.bias) discovered while loading pretrained weights. This is expected if model is being adapted.
+[20250402 11:11:07 INFO    ] Running training epoch 1
+[20250402 11:16:50 INFO    ] train epoch:1 / loss:0.01479 / SRCC:0.4269 / PLCC:0.4602
+[20250402 11:16:50 INFO    ] Starting eval...
+[20250402 11:16:50 INFO    ] Running testing in epoch 1
+[20250402 11:17:11 INFO    ] Epoch:1 ===== loss:0.01904 ===== SRCC:0.4435 ===== PLCC:0.444
+[20250402 11:17:11 INFO    ] Eval done...
+[20250402 11:17:12 INFO    ] Epoch 1 done. Time: 6.1min
+[20250402 11:17:12 INFO    ] Running training epoch 2
+[20250402 11:22:55 INFO    ] train epoch:2 / loss:0.01001 / SRCC:0.6259 / PLCC:0.657
+[20250402 11:22:55 INFO    ] Starting eval...
+[20250402 11:22:55 INFO    ] Running testing in epoch 2
+[20250402 11:23:16 INFO    ] Epoch:2 ===== loss:0.01685 ===== SRCC:0.5318 ===== PLCC:0.5282
+[20250402 11:23:16 INFO    ] Eval done...
+[20250402 11:23:17 INFO    ] Epoch 2 done. Time: 6.1min
+[20250402 11:23:17 INFO    ] Running training epoch 3
+[20250402 11:28:59 INFO    ] train epoch:3 / loss:0.008221 / SRCC:0.6955 / PLCC:0.7286
+[20250402 11:28:59 INFO    ] Starting eval...
+[20250402 11:28:59 INFO    ] Running testing in epoch 3
+[20250402 11:29:21 INFO    ] Epoch:3 ===== loss:0.01572 ===== SRCC:0.5781 ===== PLCC:0.5756
+[20250402 11:29:21 INFO    ] Eval done...
+[20250402 11:29:21 INFO    ] Epoch 3 done. Time: 6.1min
+[20250402 11:29:21 INFO    ] Running training epoch 4
+[20250402 11:35:04 INFO    ] train epoch:4 / loss:0.007433 / SRCC:0.7249 / PLCC:0.7584
+[20250402 11:35:04 INFO    ] Starting eval...
+[20250402 11:35:04 INFO    ] Running testing in epoch 4
+[20250402 11:35:26 INFO    ] Epoch:4 ===== loss:0.01568 ===== SRCC:0.5773 ===== PLCC:0.5743
+[20250402 11:35:26 INFO    ] Eval done...
+[20250402 11:35:27 INFO    ] Epoch 4 done. Time: 6.1min
+[20250402 11:35:27 INFO    ] Running training epoch 5
+[20250402 11:41:10 INFO    ] train epoch:5 / loss:0.006639 / SRCC:0.753 / PLCC:0.7877
+[20250402 11:41:10 INFO    ] Starting eval...
+[20250402 11:41:10 INFO    ] Running testing in epoch 5
+[20250402 11:41:31 INFO    ] Epoch:5 ===== loss:0.0148 ===== SRCC:0.6078 ===== PLCC:0.6073
+[20250402 11:41:31 INFO    ] Eval done...
+[20250402 11:41:32 INFO    ] Epoch 5 done. Time: 6.1min
+[20250402 11:41:32 INFO    ] Running training epoch 6
+[20250402 11:47:11 INFO    ] train epoch:6 / loss:0.006246 / SRCC:0.7667 / PLCC:0.8019
+[20250402 11:47:11 INFO    ] Starting eval...
+[20250402 11:47:11 INFO    ] Running testing in epoch 6
+[20250402 11:47:32 INFO    ] Epoch:6 ===== loss:0.01562 ===== SRCC:0.5954 ===== PLCC:0.5972
+[20250402 11:47:32 INFO    ] Eval done...
+[20250402 11:47:33 INFO    ] Epoch 6 done. Time: 6.0min
+[20250402 11:47:33 INFO    ] Running training epoch 7
+[20250402 11:53:14 INFO    ] train epoch:7 / loss:0.005789 / SRCC:0.7815 / PLCC:0.8179
+[20250402 11:53:14 INFO    ] Starting eval...
+[20250402 11:53:14 INFO    ] Running testing in epoch 7
+[20250402 11:53:36 INFO    ] Epoch:7 ===== loss:0.01566 ===== SRCC:0.5842 ===== PLCC:0.5812
+[20250402 11:53:36 INFO    ] Eval done...
+[20250402 11:53:36 INFO    ] Epoch 7 done. Time: 6.1min
+[20250402 11:53:36 INFO    ] Running training epoch 8
