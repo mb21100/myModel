@@ -66,6 +66,9 @@ class FusionModule(nn.Module):
         x = self.act(x)
         return self.cbam(x)
 
+########################################
+# Self-Attention Fusion Module (using Adaptive Pooling)
+########################################
 class SelfAttentionFusionAvg(nn.Module):
     def __init__(self, in_channels_list: List[int], out_channels: int,
                  patch_size: tuple = (7, 7), num_heads: int = 4,
@@ -77,10 +80,6 @@ class SelfAttentionFusionAvg(nn.Module):
         """
         super().__init__()
         self.patch_size = patch_size
-        self.num_features = len(in_channels_list)
-        # 각 feature map 당 patch_count = patch_size[0] * patch_size[1]
-        self.token_count = self.num_features * (patch_size[0] * patch_size[1])
-        
         self.projs = nn.ModuleList([
             nn.Conv2d(in_ch, out_channels, kernel_size=1) for in_ch in in_channels_list
         ])
@@ -91,9 +90,6 @@ class SelfAttentionFusionAvg(nn.Module):
             batch_first=True
         )
         self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
-        # Learnable positional embedding
-        self.pos_embed = nn.Parameter(torch.zeros(1, self.token_count, out_channels))
-        nn.init.trunc_normal_(self.pos_embed, std=0.02)
     
     def forward(self, features: List[torch.Tensor]) -> torch.Tensor:
         """
@@ -108,9 +104,8 @@ class SelfAttentionFusionAvg(nn.Module):
             _, C, H, W = proj_feat.shape
             token = proj_feat.view(B, C, H * W).transpose(1, 2)  # [B, H*W, out_channels]
             tokens.append(token)
+
         token_seq = torch.cat(tokens, dim=1)  # [B, total_tokens, out_channels]
-        # Add positional embedding
-        token_seq = token_seq + self.pos_embed
         token_seq = self.transformer_encoder(token_seq)  # [B, total_tokens, out_channels]
         fused_feature = token_seq.mean(dim=1)  # [B, out_channels]
         return fused_feature

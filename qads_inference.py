@@ -102,7 +102,8 @@ if __name__ == '__main__':
         #"model_path": "./output7/models/model_maniqa_pipal/model_maniqa_pipal_epoch40.pth" # SRCC: 0.8336 PLCC: 0.8292
         #"model_path": "./output7/models/model_maniqa_pipal0/model_maniqa_pipal_epoch5.pth" #SRCC: 0.8693 PLCC: 0.8657
         #"model_path": "./output7/models/model_maniqa_pipal1/model_maniqa_pipal_epoch5.pth" #SRCC: 0.8749 PLCC: 0.8693
-        "model_path": "./output7/models/model_maniqa_pipal/model_maniqa_pipal_epoch5.pth" #SRCC: 0.8736 PLCC: 0.8685
+        #"model_path": "./output7/models/model_maniqa_pipal/model_maniqa_pipal_epoch5.pth" #SRCC: 0.8736 PLCC: 0.8685
+        "model_path": "./output8/models/model_maniqa_pipal/model_maniqa_pipal_epoch3.pth" # SRCC: 0.8682 PLCC: 0.8627
         # 이 모델은 PIPAL21 로 훈련한 모델에다가, SR4KIQA 로 fine-tuning 한 후에 사용.
     })
 

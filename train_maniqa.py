@@ -10,7 +10,7 @@ from torchvision import transforms
 from torch.utils.data import DataLoader
 from models.maniqa import MANIQA
 from config import Config
-from utils.process import RandCrop, ToTensor, RandHorizontalFlip, Normalize, five_point_crop,RandFlip
+from utils.process import RandCrop, ToTensor, RandHorizontalFlip, Normalize, five_point_crop,RandFlip,RandFlipRotate
 from utils.inference_process import random_crop
 from scipy.stats import spearmanr, pearsonr
 from data.pipal21 import PIPAL21
@@ -159,24 +159,25 @@ if __name__ == '__main__':
         "val_txt_file_name": "./data/pipal21_val.txt",
 
         # optimization
-        "batch_size": 18,
-        "learning_rate": 1e-5,
-        "weight_decay": 3e-5, # 2e-4
-        "n_epoch": 40,
+        "batch_size": 16,
+        "learning_rate": 2e-7,
+        "weight_decay": 5e-4, # 2e-4
+        "n_epoch": 10,
         "val_freq": 1,
-        "T_max": 20,
-        "eta_min": 0,
+        "T_max": 10,
+        "eta_min": 1e-7,
         "num_avg_val": 5,
         "crop_size": 224,
         "num_workers": 16,
 
+        "model_path": "./output9/models/model_maniqa_pipal1/model_maniqa_pipal_epoch12.pth",
         # load & save checkpoint
         "model_name": "model_maniqa_pipal",
-        "output_path": "./output7",
-        "snap_path": "./output7/models/",               # directory for saving checkpoint
-        "log_path": "./output7/log/maniqa/",
+        "output_path": "./output10",
+        "snap_path": "./output10/models/",               # directory for saving checkpoint
+        "log_path": "./output10/log/maniqa/",
         "log_file": ".txt",
-        "tensorboard_path": "./output7/tensorboard/"
+        "tensorboard_path": "./output10/tensorboard/"
     })
 
     # 경로가 없으면 새로 생성
@@ -207,7 +208,7 @@ if __name__ == '__main__':
             [
                 RandCrop(config.crop_size),
                 Normalize(0.5, 0.5),
-                RandFlip(),
+                RandFlipRotate(),
                 ToTensor()
             ]
         ),
@@ -243,24 +244,25 @@ if __name__ == '__main__':
 
         img_size=224,
 
-        drop=0.3,
+        drop=0.35,
 
         hidden_dim=768,
 
 
     )
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    net = net.to(device)
+    # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    # net = net.to(device)
+
+    state_dict = torch.load(config.model_path, map_location=torch.device("cuda"))
+    state_dict = remove_module_prefix(state_dict, prefix="module.")
+    net.load_state_dict(state_dict)
+    net = net.cuda()
 
 
     # loss function
     # 손실 함수, 옵티마이저, 스케줄러 설정
     criterion = torch.nn.MSELoss()
 
- 
-    # 전체 스텝 수 계산 (한 에폭당 iteration 수 * 전체 에폭 수)
-    total_steps = len(train_loader) * config.n_epoch  
-    warmup_steps = int(total_steps * 0.1)  # 전체 스텝의 10%를 warm-up으로 사용
 
     optimizer = optim.AdamW(net.parameters(), lr=config.learning_rate, weight_decay=config.weight_decay)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=config.T_max, eta_min=config.eta_min)
@@ -279,19 +281,7 @@ if __name__ == '__main__':
 
     # 300 번 epoch 반복
     for epoch in range(0, config.n_epoch):
-        # def freeze_backbone(model):
-        #     for param in model.module.backbone.parameters():
-        #         param.requires_grad = False
 
-        # def unfreeze_backbone(model):
-        #     for param in model.module.backbone.parameters():
-        #         param.requires_grad = True
-
-        # # 초기 15 에폭 동안 freeze
-        # if epoch < 2:
-        #     freeze_backbone(net)
-        # else:
-        #     unfreeze_backbone(net)
 
         start_time = time.time()
         logging.info('Running training epoch {}'.format(epoch + 1))

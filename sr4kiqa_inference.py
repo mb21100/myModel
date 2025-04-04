@@ -102,7 +102,11 @@ if __name__ == '__main__':
         #"model_path": "./output6/models/model_maniqa_pipal/model_maniqa_pipal_epoch30.pth" #SRCC: 0.6187 PLCC: 0.5653
         #"model_path": "./output7/models/model_maniqa_pipal/model_maniqa_pipal_epoch35.pth" # SRCC: 0.5944 PLCC: 0.5520
         #"model_path": "./output7/models/model_maniqa_pipal0/model_maniqa_pipal_epoch5.pth" # SRCC: 0.7075 PLCC: 0.7012
-        "model_path": "./output7/models/model_maniqa_pipal/model_maniqa_pipal_epoch7.pth" # SRCC: 0.6984 PLCC: 0.6876
+        #"model_path": "./output7/models/model_maniqa_pipal/model_maniqa_pipal_epoch7.pth" # SRCC: 0.6984 PLCC: 0.6876
+
+        #"model_path": "./output8/models/model_maniqa_pipal/model_maniqa_pipal_epoch3.pth" # SRCC: 0.7474 PLCC: 0.7308
+
+        "model_path": "./output9/models/model_maniqa_pipal/model_maniqa_pipal_epoch5.pth" 
     })
 
     if not os.path.exists(config.valid):

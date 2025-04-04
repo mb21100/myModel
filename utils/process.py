@@ -1,5 +1,6 @@
 import torch
 import numpy as np
+import cv2
 
 
 def random_crop(d_img, config):
@@ -192,6 +193,36 @@ class RandFlip(object):
             'score': score
         }
         return sample
+
+class RandFlipRotate(object):
+    def __init__(self, max_angle=5, prob_rotate=0.5):
+        self.max_angle = max_angle      # 최대 회전 각도 (°)
+        self.prob_rotate = prob_rotate  # 회전 적용 확률 (0~1)
+    
+    def __call__(self, sample):
+        d_img = sample['d_img_org']
+        score = sample['score']
+        
+        # 수직/수평 flip
+        if np.random.random() > 0.5:
+            d_img = np.flipud(d_img).copy()
+        if np.random.random() > 0.5:
+            d_img = np.fliplr(d_img).copy()
+        
+        # 확률에 따라 회전 적용
+        if np.random.random() < self.prob_rotate:
+            angle = np.random.uniform(-self.max_angle, self.max_angle)
+            h, w = d_img.shape[:2]
+            center = (w // 2, h // 2)
+            M = cv2.getRotationMatrix2D(center, angle, 1.0)
+            d_img = cv2.warpAffine(d_img, M, (w, h), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT_101)
+        
+        sample = {
+            'd_img_org': d_img,
+            'score': score
+        }
+        return sample
+
 
 
 class ToTensor(object):

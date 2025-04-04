@@ -36,7 +36,7 @@
 [20250402 12:45:41 INFO    ] train epoch:5 / loss:0.00697 / SRCC:0.7397 / PLCC:0.7756
 [20250402 12:45:41 INFO    ] Starting eval...
 [20250402 12:45:41 INFO    ] Running testing in epoch 5
-[20250402 12:46:03 INFO    ] Epoch:5 ===== loss:0.01439 ===== SRCC:0.6122 ===== PLCC:0.6165
+[20250402 12:46:03 INFO    ] Epoch:5 ===== loss:0.01439 ===== SRCC:0.6122 ===== PLCC:0.6165 ///////////////////////////////////////////////////
 [20250402 12:46:03 INFO    ] Eval done...
 [20250402 12:46:03 INFO    ] Epoch 5 done. Time: 6.1min
 [20250402 12:46:03 INFO    ] Running training epoch 6
