@@ -1,0 +1,40 @@
+Fold 0 - Train Folders: ['Animal1', 'Animal3', 'Building1', 'Building5', 'CityStreetDay1', 'CityStreetDay2', 'CityStreetNight', 'Face1', 'Face3', 'Face5', 'Nature4', 'Nature9', 'People1', 'People4', 'TextCompIn1', 'TextCompOut1', 'TextCompOut3', 'TextSimpIn2', 'TextSimpOut2'], Valid Folders: ['Animal2', 'Building2', 'Nature6', 'People5', 'TextCompIn3']
+Iteration 0, Fold 0, Epoch 1: Predictions saved to ./output10/log/sr4kiqa2/iter_0_fold_0_predictions_epoch_1.txt
+Iteration 0, Fold 0, Epoch 2: Predictions saved to ./output10/log/sr4kiqa2/iter_0_fold_0_predictions_epoch_2.txt
+Iteration 0, Fold 0, Epoch 3: Predictions saved to ./output10/log/sr4kiqa2/iter_0_fold_0_predictions_epoch_3.txt
+Iteration 0, Fold 0, Epoch 4: Predictions saved to ./output10/log/sr4kiqa2/iter_0_fold_0_predictions_epoch_4.txt
+Iteration 0, Fold 0, Epoch 5: Predictions saved to ./output10/log/sr4kiqa2/iter_0_fold_0_predictions_epoch_5.txt
+Iteration 0, Fold 0, Epoch 6: Predictions saved to ./output10/log/sr4kiqa2/iter_0_fold_0_predictions_epoch_6.txt
+Iteration 0, Fold 0, Epoch 7: Predictions saved to ./output10/log/sr4kiqa2/iter_0_fold_0_predictions_epoch_7.txt
+Fold 1 - Train Folders: ['Animal1', 'Animal2', 'Animal3', 'Building1', 'Building2', 'Building5', 'CityStreetDay1', 'CityStreetDay2', 'CityStreetNight', 'Face1', 'Face3', 'Face5', 'Nature4', 'Nature6', 'People1', 'People5', 'TextCompIn3', 'TextCompOut1', 'TextSimpOut2'], Valid Folders: ['Nature9', 'People4', 'TextCompIn1', 'TextCompOut3', 'TextSimpIn2']
+Iteration 0, Fold 1, Epoch 1: Predictions saved to ./output10/log/sr4kiqa2/iter_0_fold_1_predictions_epoch_1.txt
+Iteration 0, Fold 1, Epoch 2: Predictions saved to ./output10/log/sr4kiqa2/iter_0_fold_1_predictions_epoch_2.txt
+Iteration 0, Fold 1, Epoch 3: Predictions saved to ./output10/log/sr4kiqa2/iter_0_fold_1_predictions_epoch_3.txt
+Iteration 0, Fold 1, Epoch 4: Predictions saved to ./output10/log/sr4kiqa2/iter_0_fold_1_predictions_epoch_4.txt
+Iteration 0, Fold 1, Epoch 5: Predictions saved to ./output10/log/sr4kiqa2/iter_0_fold_1_predictions_epoch_5.txt
+Iteration 0, Fold 1, Epoch 6: Predictions saved to ./output10/log/sr4kiqa2/iter_0_fold_1_predictions_epoch_6.txt
+Iteration 0, Fold 1, Epoch 7: Predictions saved to ./output10/log/sr4kiqa2/iter_0_fold_1_predictions_epoch_7.txt
+Fold 2 - Train Folders: ['Animal1', 'Animal2', 'Animal3', 'Building1', 'Building2', 'CityStreetDay1', 'CityStreetDay2', 'Face1', 'Face5', 'Nature6', 'Nature9', 'People1', 'People4', 'People5', 'TextCompIn1', 'TextCompIn3', 'TextCompOut1', 'TextCompOut3', 'TextSimpIn2'], Valid Folders: ['Building5', 'CityStreetNight', 'Face3', 'Nature4', 'TextSimpOut2']
+Iteration 0, Fold 2, Epoch 1: Predictions saved to ./output10/log/sr4kiqa2/iter_0_fold_2_predictions_epoch_1.txt
+Iteration 0, Fold 2, Epoch 2: Predictions saved to ./output10/log/sr4kiqa2/iter_0_fold_2_predictions_epoch_2.txt
+Iteration 0, Fold 2, Epoch 3: Predictions saved to ./output10/log/sr4kiqa2/iter_0_fold_2_predictions_epoch_3.txt
+Iteration 0, Fold 2, Epoch 4: Predictions saved to ./output10/log/sr4kiqa2/iter_0_fold_2_predictions_epoch_4.txt
+Iteration 0, Fold 2, Epoch 5: Predictions saved to ./output10/log/sr4kiqa2/iter_0_fold_2_predictions_epoch_5.txt
+Iteration 0, Fold 2, Epoch 6: Predictions saved to ./output10/log/sr4kiqa2/iter_0_fold_2_predictions_epoch_6.txt
+Iteration 0, Fold 2, Epoch 7: Predictions saved to ./output10/log/sr4kiqa2/iter_0_fold_2_predictions_epoch_7.txt
+Fold 3 - Train Folders: ['Animal2', 'Building1', 'Building2', 'Building5', 'CityStreetNight', 'Face1', 'Face3', 'Nature4', 'Nature6', 'Nature9', 'People1', 'People4', 'People5', 'TextCompIn1', 'TextCompIn3', 'TextCompOut1', 'TextCompOut3', 'TextSimpIn2', 'TextSimpOut2'], Valid Folders: ['Animal1', 'Animal3', 'CityStreetDay1', 'CityStreetDay2', 'Face5']
+Iteration 0, Fold 3, Epoch 1: Predictions saved to ./output10/log/sr4kiqa2/iter_0_fold_3_predictions_epoch_1.txt
+Iteration 0, Fold 3, Epoch 2: Predictions saved to ./output10/log/sr4kiqa2/iter_0_fold_3_predictions_epoch_2.txt
+Iteration 0, Fold 3, Epoch 3: Predictions saved to ./output10/log/sr4kiqa2/iter_0_fold_3_predictions_epoch_3.txt
+Iteration 0, Fold 3, Epoch 4: Predictions saved to ./output10/log/sr4kiqa2/iter_0_fold_3_predictions_epoch_4.txt
+Iteration 0, Fold 3, Epoch 5: Predictions saved to ./output10/log/sr4kiqa2/iter_0_fold_3_predictions_epoch_5.txt
+Iteration 0, Fold 3, Epoch 6: Predictions saved to ./output10/log/sr4kiqa2/iter_0_fold_3_predictions_epoch_6.txt
+Iteration 0, Fold 3, Epoch 7: Predictions saved to ./output10/log/sr4kiqa2/iter_0_fold_3_predictions_epoch_7.txt
+Fold 4 - Train Folders: ['Animal1', 'Animal2', 'Animal3', 'Building2', 'Building5', 'CityStreetDay1', 'CityStreetDay2', 'CityStreetNight', 'Face3', 'Face5', 'Nature4', 'Nature6', 'Nature9', 'People4', 'People5', 'TextCompIn1', 'TextCompIn3', 'TextCompOut3', 'TextSimpIn2', 'TextSimpOut2'], Valid Folders: ['Building1', 'Face1', 'People1', 'TextCompOut1']
+Iteration 0, Fold 4, Epoch 1: Predictions saved to ./output10/log/sr4kiqa2/iter_0_fold_4_predictions_epoch_1.txt
+Iteration 0, Fold 4, Epoch 2: Predictions saved to ./output10/log/sr4kiqa2/iter_0_fold_4_predictions_epoch_2.txt
+Iteration 0, Fold 4, Epoch 3: Predictions saved to ./output10/log/sr4kiqa2/iter_0_fold_4_predictions_epoch_3.txt
+Iteration 0, Fold 4, Epoch 4: Predictions saved to ./output10/log/sr4kiqa2/iter_0_fold_4_predictions_epoch_4.txt
+Iteration 0, Fold 4, Epoch 5: Predictions saved to ./output10/log/sr4kiqa2/iter_0_fold_4_predictions_epoch_5.txt
+Iteration 0, Fold 4, Epoch 6: Predictions saved to ./output10/log/sr4kiqa2/iter_0_fold_4_predictions_epoch_6.txt
+Iteration 0, Fold 4, Epoch 7: Predictions saved to ./output10/log/sr4kiqa2/iter_0_fold_4_predictions_epoch_7.txt

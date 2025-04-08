@@ -173,14 +173,14 @@ if __name__ == '__main__':
 
         # optimization
         "batch_size": 4, # for gpu // how many images data loader will bring at one time
-        "learning_rate": 1e-6, #2e-5
-        "num_avg_val": 45, #25
+        "learning_rate": 1e-5, #2e-5
+        "num_avg_val": 25, #25
         "crop_size": 224,
         "n_iteration": 1,
-        "weight_decay":  1e-4, #1e-4
+        "weight_decay":  2e-4, #1e-4
         "val_freq": 1,
-        "T_max": 50, #100
-        "eta_min": 1e-7,
+        "T_max": 10, #100
+        "eta_min": 0,
         "num_workers": 8,
 
         # model 관련
@@ -194,16 +194,16 @@ if __name__ == '__main__':
         "num_outputs": 1,
         "num_tab": 2,
         "scale": 0.1,
-        "n_epoch_fold": 25, #5
+        "n_epoch_fold": 7, #5
 
         # load & save checkpoint, 로그, 텐서보드 등
         #"model_path": "./epoch3",  # in 5 epochs, epoch3 has the best performance on plcc and srcc.
         "model_name": "model_maniqa_sr4kiqa2",
-        "output_path": "./output3/sr4kiqa2/",
-        "snap_path": "./output3/models/sr4kiqa2",       # checkpoint 저장 폴더
-        "log_path": "./output3/log/sr4kiqa2/",
+        "output_path": "./output10/sr4kiqa2/",
+        "snap_path": "./output10/models/sr4kiqa2",       # checkpoint 저장 폴더
+        "log_path": "./output10/log/sr4kiqa2/",
         "log_file": "sr4kiqa_log.txt",
-        "tensorboard_path": "./output3/tensorboard/sr4kiqa2"
+        "tensorboard_path": "./output10/tensorboard/sr4kiqa2"
         
     })
     os.makedirs(config["snap_path"], exist_ok=True)
@@ -265,46 +265,25 @@ if __name__ == '__main__':
 
                 img_size=224,
 
-                drop=0.1,
+                drop=0.3,
 
                 hidden_dim=768,
 
             )
-            # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-            # net = net.to(device)
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            net = net.to(device)
 
-            state_dict = torch.load("./output2/models/model_maniqa_pipal/model_maniqa_pipal_epoch35.pth", map_location=torch.device("cuda"))
-            state_dict = remove_module_prefix(state_dict, prefix="module.")
-            net.load_state_dict(state_dict)
-            net = net.cuda()
+            # state_dict = torch.load("./output2/models/model_maniqa_pipal/model_maniqa_pipal_epoch35.pth", map_location=torch.device("cuda"))
+            # state_dict = remove_module_prefix(state_dict, prefix="module.")
+            # net.load_state_dict(state_dict)
+            # net = net.cuda()
             # # DataParallel 여부 확인 후, 실제 모델에 접근
             # if isinstance(net, torch.nn.DataParallel):
             #     base_model = net.module  # net.module이 실제 모델(MANIQA)
             # else:
             #     base_model = net
 
-            # # vit 객체가 있는지 확인 (MANIQA에서는 base_model.vit로 접근)
-            # if hasattr(base_model, 'vit'):
-            #     vit_model = base_model.vit
 
-            #     # 1. Patch Embedding 레이어 동결
-            #     if hasattr(vit_model, 'patch_embed'):
-            #         for param in vit_model.patch_embed.parameters():
-            #             param.requires_grad = False
-            #         print("Patch Embedding 레이어 동결 완료.")
-
-            #     # 2. 첫 num_freeze_blocks개의 Transformer 블록 동결
-            #     num_freeze_blocks = 4  # 필요에 따라 조절
-            #     if hasattr(vit_model, 'blocks'):
-            #         for block in vit_model.blocks[:num_freeze_blocks]:
-            #             for param in block.parameters():
-            #                 param.requires_grad = False
-            #         print(f"ViT의 처음 {num_freeze_blocks}개 Block 동결 완료.")
-            #     else:
-            #         print("vit.blocks를 찾지 못했습니다.")
-
-            # else:
-            #     print("MANIQA 모델에서 vit를 찾지 못했습니다. 동결할 레이어가 없습니다.")
 
             # 이후 옵티마이저 생성
             optimizer = torch.optim.Adam(
@@ -389,21 +368,21 @@ if __name__ == '__main__':
                 }
                 fold_results.append(epoch_result)
 
-                # 체크포인트 저장 (매 epoch마다)
-                checkpoint_path = os.path.join(
-                    config["snap_path"],
-                    f"{config['model_name']}_iter{iteration}_fold{fold}_epoch{epoch+1}.pth"
-                )
-                torch.save(net.state_dict(), checkpoint_path)
+                # # 체크포인트 저장 (매 epoch마다)
+                # checkpoint_path = os.path.join(
+                #     config["snap_path"],
+                #     f"{config['model_name']}_iter{iteration}_fold{fold}_epoch{epoch+1}.pth"
+                # )
+                # torch.save(net.state_dict(), checkpoint_path)
 
-                if (plcc > pre_plcc or srcc > pre_srcc):
-                    pre_plcc = plcc
-                    state_dict = torch.load(checkpoint_path, map_location=torch.device('cuda'))
-                    net.load_state_dict(state_dict)
-                    best_checkpoint_path = os.path.join(
-                                config["snap_path"],
-                                f"{config['model_name']}_iter{iteration}_fold{fold}_best.pth"
-                            )
+                # if (plcc > pre_plcc or srcc > pre_srcc):
+                #     pre_plcc = plcc
+                #     state_dict = torch.load(checkpoint_path, map_location=torch.device('cuda'))
+                #     net.load_state_dict(state_dict)
+                #     best_checkpoint_path = os.path.join(
+                #                 config["snap_path"],
+                #                 f"{config['model_name']}_iter{iteration}_fold{fold}_best.pth"
+                #             )
 
             # fold 정보에 epoch 결과 추가
             fold_info["results"] = fold_results
