@@ -2,7 +2,7 @@
 
 Shawn Lee (Supervised by Aaron Zhang)
 
-[University of Bristol Computer Vision Lab]([https://sites.google.com/view/iigroup-thu/home](https://vilab.blogs.bristol.ac.uk/research/computer-vision/))
+[University of Bristol Computer Vision Lab](https://vilab.blogs.bristol.ac.uk/research/computer-vision/)
 
 ## Network Architecture
 
