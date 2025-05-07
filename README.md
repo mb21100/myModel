@@ -5,6 +5,9 @@ Shawn Lee (Supervised by Aaron Zhang)
 [University of Bristol Computer Vision Lab](https://vilab.blogs.bristol.ac.uk/research/computer-vision/)
 
 ## Network Architecture
+![image.png](image/pipeline.png)
+
+## Main Contributions
 
 ## Checkpoints
 The pretrained model checkpoints are provided [here](https://drive.google.com/drive/folders/1fFv3BFGcDvrerYEMK9wWPuJzqtF9aRN_?usp=drive_link).
