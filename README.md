@@ -5,7 +5,7 @@ Shawn Lee (Supervised by Aaron Zhang)
 [University of Bristol Computer Vision Lab](https://vilab.blogs.bristol.ac.uk/research/computer-vision/)
 
 ## Network Architecture
-![image.png](MAXIQA.png)
+![image.png](image/MAXIQA.png)
 
 ## Main Contributions
 - Hybrid Backbone Integration: Identified effective MaxViT feature maps that capture local and global distortions, highlighting the strength of hybrid architectures for IQA.
