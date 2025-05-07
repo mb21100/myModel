@@ -34,6 +34,8 @@ The pretrained model checkpoints are provided [here](https://drive.google.com/dr
 ## Usage
 
 ## Results
+![image1.png](image/sr4kiqa.png)
+![image2.pmg](image/flops.png)
 
 ## Acknowledgement
 This code borrows parts from [MANIQA](https://github.com/IIGROUP/MANIQA#) and [timm](https://github.com/rwightman/pytorch-image-models).
