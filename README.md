@@ -26,7 +26,9 @@ The pretrained model checkpoints are provided [here](https://drive.google.com/dr
 - CUDA Version: CudatoolKit 11.8
 
 ## Datasets
-
+- The PIPAL dataset is used to train and validate my model. 
+- The SR4KIQA itself is used for intra-dataset evaluation.
+- After pre-training MAXIQA model with PIPAL dataset, QADS and SR4KIQA dataset were used for cross-dataset evaluation.
 
 ## Benchmark Code
 
