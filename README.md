@@ -31,6 +31,9 @@ The pretrained model checkpoints are provided [here](https://drive.google.com/dr
 - After pre-training MAXIQA model with PIPAL dataset, QADS and SR4KIQA dataset were used for cross-dataset evaluation.
 
 ## Benchmark Code
+- Conventional IQA Model(PSNR, SSIM, MS-SSIM, BRISQUE, NIQE, PIQE, NRQM(Ma), PI) benchmark results are provided [here](https://drive.google.com/drive/folders/1wqUmEop1KhgfHGllC0r3IoqFTFql_r_7?usp=drive_link)
+
+- Deep Learning BIQA Model(HyperIQA, TReS, MANIQA) codes are re-implemented for 5-fold cross-validation and data-loading pipeline. The benchmark codes and results are provided [here]().
 
 
 ## Usage
