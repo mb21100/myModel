@@ -4,6 +4,9 @@ Shawn Lee (Supervised by Aaron Zhang)
 
 [University of Bristol Computer Vision Lab](https://vilab.blogs.bristol.ac.uk/research/computer-vision/)
 
+## Motivations
+
+
 ## Network Architecture
 ![image.png](image/MAXIQA.png)
 
