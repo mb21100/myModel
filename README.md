@@ -1,4 +1,4 @@
-# MaxIQA: MaxViT backbone with Channel Attention and Self-Attention for Blind Image Quality Assessment
+# MaxIQA: MaxViT backbone with Channel Attention and Self-Attention for Blind Image Quality Assessment for 4K Super-Resolution image dataset
 
 Shawn Lee (Supervised by Aaron Zhang)
 
