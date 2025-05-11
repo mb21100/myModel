@@ -5,6 +5,7 @@ Shawn Lee (Supervised by Aaron Zhang)
 [University of Bristol Computer Vision Lab](https://vilab.blogs.bristol.ac.uk/research/computer-vision/)
 
 ## Motivations
+Super-resolution (SR) technology aims to reconstruct high-resolution images from low-resolution inputs, yet artificial distortions frequently occur, causing perceptual quality degradation and negatively impacting downstream tasks like object detection and recognition. Existing Image Quality Assessment (IQA) models are predominantly trained on datasets focusing on classical distortions (e.g., noise, blur, compression), thus failing to adequately capture the distinctive distortions arising from SR processes, particularly in modern high-resolution scenarios such as 4K imaging. Furthermore, despite recent advancements, hybrid architectures combining CNN and Transformer models remain largely unexplored in IQA research. Therefore, comprehensive studies leveraging hybrid IQA models specifically designed and validated for 4K-SR images are critically required.
 
 
 ## Network Architecture
