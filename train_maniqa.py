@@ -30,7 +30,7 @@ def remove_module_prefix(state_dict, prefix="module.module."):
         new_state_dict[new_key] = value
     return new_state_dict
 
-# 랜덤 시드 고정정
+
 def setup_seed(seed):
     random.seed(seed)
     os.environ['PYTHONHASHSEED'] = str(seed)
@@ -41,7 +41,6 @@ def setup_seed(seed):
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.deterministic = True
 
-# 로그 폴더/파일 생성 및설정정
 def set_logging(config):
     if not os.path.exists(config.log_path): 
         os.makedirs(config.log_path)
@@ -57,19 +56,18 @@ def set_logging(config):
 
 def train_epoch(epoch, net, criterion, optimizer, scheduler, train_loader):
     losses = []
-    net.train() # 모델을 학습 모드로 전환환
+    net.train() 
     # save data for one epoch
     pred_epoch = []
     labels_epoch = []
     
     for data in tqdm(train_loader):
-        x_d = data['d_img_org'].cuda() #입력 이미지를 GPU 로 전송송
+        x_d = data['d_img_org'].cuda() 
         labels = data['score']
-        labels = torch.squeeze(labels.type(torch.FloatTensor)).cuda()  # 정답(score)을 GPU로 전송
-    
+        labels = torch.squeeze(labels.type(torch.FloatTensor)).cuda() 
         for i in range(1):
             #x_d_crop = random_crop(x_d, config)  # 랜덤 크롭 추출
-            pred = net(x_d)  # crop에 대한 예측 (B, output)
+            pred = net(x_d)  
             
             optimizer.zero_grad()
             loss = criterion(torch.squeeze(pred), labels)
@@ -79,9 +77,7 @@ def train_epoch(epoch, net, criterion, optimizer, scheduler, train_loader):
             optimizer.step()
             scheduler.step()
 
-            
-            
-            # 각 crop의 예측값과 라벨을 저장 (평가 시 여러 crop의 결과를 확인할 수 있음)
+
             pred_batch_numpy = pred.data.cpu().numpy()
             labels_batch_numpy = labels.data.cpu().numpy()
             pred_epoch = np.append(pred_epoch, pred_batch_numpy)
@@ -101,12 +97,11 @@ def train_epoch(epoch, net, criterion, optimizer, scheduler, train_loader):
 def eval_epoch(config, epoch, net, criterion, test_loader):
     with torch.no_grad():
         losses = []
-        net.eval() # 모델을 평가 모드로 전환
+        net.eval() 
         # save data for one epoch
         pred_epoch = []
         labels_epoch = []
 
-        # 여러 개의 랜덤 크롭/전처리를 통해 평균 예측값 산출
         for data in tqdm(test_loader):
             pred = 0
             for i in range(5):
@@ -116,7 +111,7 @@ def eval_epoch(config, epoch, net, criterion, test_loader):
                 x_d = five_point_crop(i, d_img=x_d, config=config)
                 pred += net(x_d)
 
-            pred /= 5 # 평균내기
+            pred /= 5 
             # compute loss
             loss = criterion(torch.squeeze(pred), labels)
             losses.append(loss.item())
@@ -135,9 +130,8 @@ def eval_epoch(config, epoch, net, criterion, test_loader):
         logging.info('Epoch:{} ===== loss:{:.4} ===== SRCC:{:.4} ===== PLCC:{:.4}'.format(epoch + 1, np.mean(losses), rho_s, rho_p))
         return np.mean(losses), rho_s, rho_p
 
- # 메인 실행 부분
+
 if __name__ == '__main__':
-    # cpu 관련 thread 수 설정
     cpu_num = 1
     os.environ['OMP_NUM_THREADS'] = str(cpu_num)
     os.environ['OPENBLAS_NUM_THREADS'] = str(cpu_num)
@@ -148,7 +142,6 @@ if __name__ == '__main__':
 
     setup_seed(20)
 
-    # Config 객체를 사용해 설정값 로드 (데이터 경로, 학습 파라미터, 모델 하이퍼파라미터 등)
     # config file
     config = Config({
         # dataset path
@@ -180,7 +173,6 @@ if __name__ == '__main__':
         "tensorboard_path": "./output10/tensorboard/"
     })
 
-    # 경로가 없으면 새로 생성
     if not os.path.exists(config.output_path):
         os.mkdir(config.output_path)
 
@@ -199,7 +191,6 @@ if __name__ == '__main__':
 
     writer = SummaryWriter(config.tensorboard_path)
 
-    # 데이터셋 로드: PIPAL21을 사용해 학습 및 검증 데이터셋 구성
     # data load
     train_dataset = PIPAL21(
         dis_path=config.train_dis_path,
@@ -236,7 +227,7 @@ if __name__ == '__main__':
         drop_last=True,
         shuffle=False
     )
-    # 모델 재초기화 (pre-trained model 로드)
+
     #net = torch.load(config.model_path)
     net = MANIQA(
 
@@ -259,8 +250,6 @@ if __name__ == '__main__':
     net = net.cuda()
 
 
-    # loss function
-    # 손실 함수, 옵티마이저, 스케줄러 설정
     criterion = torch.nn.MSELoss()
 
 
@@ -268,18 +257,14 @@ if __name__ == '__main__':
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=config.T_max, eta_min=config.eta_min)
 
 
-    # make directory for saving weights
-    # 체크포인트 저장 디렉토리 생성
     if not os.path.exists(config.snap_path):
         os.mkdir(config.snap_path)
 
     # train & validation
-    # Training & validation 루프
     losses, scores = [], []
     best_srocc = 0
     best_plcc = 0
 
-    # 300 번 epoch 반복
     for epoch in range(0, config.n_epoch):
 
 
@@ -297,7 +282,6 @@ if __name__ == '__main__':
             loss, rho_s, rho_p = eval_epoch(config, epoch, net, criterion, val_loader)
             logging.info('Eval done...')
 
-        # 체크포인트 저장 (매 epoch마다)
         checkpoint_path = os.path.join(
             config["snap_path"],
             f"{config['model_name']}_epoch{epoch+1}.pth"

@@ -77,8 +77,8 @@ if __name__ == '__main__':
     # config file
     config = Config({
         # dataset path
-        "db_name": "QADS",  # 이번엔 PIPAL22 데이터셋
-        "data_path": "/home/mb21100/data/QADS/super-resolved_images",  # 데이터 경로 (예시)
+        "db_name": "QADS",  
+        "data_path": "/home/mb21100/data/QADS/super-resolved_images",  
         "txt_file_name": "/home/mb21100/data/QADS/mos_with_names2.txt",
         
         
@@ -93,7 +93,6 @@ if __name__ == '__main__':
         # load & save checkpoint
         "valid": "./output/eval",
         "valid_path": "./output/valid/qads_inference_eval",
-        #"model_path": "./output/models/model_maniqa_pipal/epoch3" # epoch 에서 가장 좋은 성능을 만든 epoch 번호로 수정 ##### 여기 수정하고 돌리기기
         #"model_path": "./output/models/model_maniqa_pipal/model_maniqa_pipal_epoch43.pth"
         # "model_path": "./output2/models/model_maniqa_pipal/model_maniqa_pipal_epoch35.pth" # hidden_dim = 768 / SRCC: 0.8799 PLCC: 0.8753
         #"model_path": "./output4/models/model_maniqa_pipal/model_maniqa_pipal_epoch45.pth" #SRCC: 0.8633 PLCC: 0.8556
@@ -117,7 +116,7 @@ if __name__ == '__main__':
     # data load
     test_dataset = QADS(
         dis_path=config.data_path,
-        txt_file_name = config.txt_file_name, # 나중에 srcc,krcc,plcc 구할 때 사용하자자
+        txt_file_name = config.txt_file_name, 
         transform=transforms.Compose([Normalize(0.5, 0.5), ToTensor()]),
     )
     test_loader = DataLoader(
@@ -128,7 +127,6 @@ if __name__ == '__main__':
         shuffle=False
     )
 
-    #MANIQA 모델 생성 및 GPU에 올리기, DataParallel로 멀티-GPU 지원
     net = MANIQA(
 
         num_outputs=1,
@@ -157,19 +155,15 @@ if __name__ == '__main__':
     df_gt = pd.read_csv("/home/mb21100/data/QADS/mos_with_names2.txt",
                     names=['filename','gt'],
                     sep=',', header=None)
-    # 혹시 파일명 끝에 공백이 있을 수 있으니 .strip()
     df_gt['filename'] = df_gt['filename'].str.strip()
 
-    # 2) 모델 예측값 불러오기
     df_pred = pd.read_csv("./output/valid/qads_inference_eval/output.txt",
                         names=['filename','pred'],
                         sep=',', header=None)
     df_pred['filename'] = df_pred['filename'].str.strip()
 
-    # 3) filename을 기준으로 merge (inner join)
     df_merged = pd.merge(df_gt, df_pred, on='filename', how='inner')
 
-    # 4) SRCC, PLCC, KRCC 계산
     srcc, _ = spearmanr(df_merged['pred'], df_merged['gt'])
     plcc, _ = pearsonr(df_merged['pred'], df_merged['gt'])
     krcc, _ = kendalltau(df_merged['pred'], df_merged['gt'])

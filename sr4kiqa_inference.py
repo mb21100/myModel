@@ -77,8 +77,8 @@ if __name__ == '__main__':
     # config file
     config = Config({
         # dataset path
-        "db_name": "SR4KIQA",  # 이번엔 PIPAL22 데이터셋
-        "data_path": "/home/mb21100/data/SR4KIQA_inference",  # 데이터 경로 (예시)
+        "db_name": "SR4KIQA",  
+        "data_path": "/home/mb21100/data/SR4KIQA_inference",  
         "txt_file_name": "/home/mb21100/data/SR4KIQA/MOS.csv",
         
         
@@ -96,15 +96,6 @@ if __name__ == '__main__':
         "valid": "./output/eval",
         "valid_path": "./output/valid/sr4kiqa_inference_eval",
         
-        # "model_path": "./output2/models/model_maniqa_pipal/model_maniqa_pipal_epoch35.pth" # hidden_dim = 768 / SRCC: 0.6674 PLCC: 0.6527
-        #"model_path": "./output5/models/model_maniqa_pipal/model_maniqa_pipal_epoch13.pth" # SRCC: 0.7264 PLCC: 0.7130
-        # 이 모델은 PIPAL21 로 훈련한 모델에다가, SR4KIQA 로 fine-tuning 한 후에 사용.
-        #"model_path": "./output6/models/model_maniqa_pipal/model_maniqa_pipal_epoch30.pth" #SRCC: 0.6187 PLCC: 0.5653
-        #"model_path": "./output7/models/model_maniqa_pipal/model_maniqa_pipal_epoch35.pth" # SRCC: 0.5944 PLCC: 0.5520
-        #"model_path": "./output7/models/model_maniqa_pipal0/model_maniqa_pipal_epoch5.pth" # SRCC: 0.7075 PLCC: 0.7012
-        #"model_path": "./output7/models/model_maniqa_pipal/model_maniqa_pipal_epoch7.pth" # SRCC: 0.6984 PLCC: 0.6876
-
-        #"model_path": "./output8/models/model_maniqa_pipal/model_maniqa_pipal_epoch3.pth" # SRCC: 0.7474 PLCC: 0.7308
 
         "model_path": "./output9/models/model_maniqa_pipal/model_maniqa_pipal_epoch5.pth" 
     })
@@ -119,7 +110,7 @@ if __name__ == '__main__':
     # data load
     test_dataset = SR4KIQA2(
         dis_path=config.data_path,
-        txt_file_name = config.txt_file_name, # 나중에 srcc,krcc,plcc 구할 때 사용하자자
+        txt_file_name = config.txt_file_name, 
         transform=transforms.Compose([Normalize(0.5, 0.5), ToTensor()]),
     )
     test_loader = DataLoader(
@@ -130,7 +121,6 @@ if __name__ == '__main__':
         shuffle=False
     )
 
-    #MANIQA 모델 생성 및 GPU에 올리기, DataParallel로 멀티-GPU 지원
     net = MANIQA(
 
         num_outputs=1,
@@ -159,19 +149,15 @@ if __name__ == '__main__':
     df_gt = pd.read_csv("/home/mb21100/data/SR4KIQA/MOS.csv",
                     names=['filename','gt','gt2'],
                     sep=',', header=None)
-    # 혹시 파일명 끝에 공백이 있을 수 있으니 .strip()
     df_gt['filename'] = df_gt['filename'].str.strip()
 
-    # 2) 모델 예측값 불러오기
     df_pred = pd.read_csv("./output/valid/sr4kiqa_inference_eval/output.txt",
                         names=['filename','pred'],
                         sep=',', header=None)
     df_pred['filename'] = df_pred['filename'].str.strip()
 
-    # 3) filename을 기준으로 merge (inner join)
     df_merged = pd.merge(df_gt, df_pred, on='filename', how='inner')
 
-    # 4) SRCC, PLCC, KRCC 계산
     srcc, _ = spearmanr(df_merged['pred'], df_merged['gt'])
     plcc, _ = pearsonr(df_merged['pred'], df_merged['gt'])
     krcc, _ = kendalltau(df_merged['pred'], df_merged['gt'])

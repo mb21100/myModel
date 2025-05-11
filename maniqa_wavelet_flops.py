@@ -8,10 +8,7 @@
 # # FPN: multi-scale feature fusion
 # class FPN(nn.Module):
 #     def __init__(self, in_channels_list, out_channels):
-#         """
-#         in_channels_list: 각 스테이지 feature map의 채널 수 리스트 (예: [C1, C2, C3, C4])
-#         out_channels: FPN에서 사용할 통일된 채널 수 (예: 256)
-#         """
+
 #         super().__init__()
 #         self.lateral_convs = nn.ModuleList([
 #             nn.Conv2d(in_ch, out_channels, kernel_size=1) for in_ch in in_channels_list
@@ -62,7 +59,6 @@
 #         x_cat = torch.cat([avg_out, max_out], dim=1)
 #         return self.sigmoid(self.conv(x_cat))
 
-# # CBAM 모듈: 채널 및 공간 어텐션 결합
 # class CBAM(nn.Module):
 #     def __init__(self, in_channels, reduction=16, kernel_size=7):
 #         super().__init__()
@@ -73,7 +69,6 @@
 #         x = x * self.channel_attention(x)
 #         return x * self.spatial_attention(x)
 
-# # FusionModule: 두 feature map을 concat 후 1x1 Conv, BN, ReLU, CBAM 적용
 # class FusionModule(nn.Module):
 #     def __init__(self, channels):
 #         super().__init__()
@@ -92,11 +87,7 @@
 # # Cross-Attention Fusion Module
 # class CrossAttentionFusion(nn.Module):
 #     def __init__(self, hidden_dim, num_tokens=4, num_heads=4):
-#         """
-#         hidden_dim: 최종 기본 branch feature 차원 (예: 512)
-#         num_tokens: feature vector를 분할할 토큰 수 (hidden_dim이 num_tokens로 나누어 떨어져야 함)
-#         num_heads: MultiheadAttention의 head 수
-#         """
+
 #         super().__init__()
 #         self.num_tokens = num_tokens
 #         assert hidden_dim % num_tokens == 0, "hidden_dim must be divisible by num_tokens"
@@ -127,18 +118,15 @@
 #     def __init__(self, num_outputs=1, img_size=224, drop=0.1, hidden_dim=512, num_tokens=4, **kwargs):
 #         super().__init__()
 #         fpn_out_channels = 256
-#         # 기본 branch: MaxViT backbone 사용 (features_only=True)
 #         self.backbone = timm.create_model(
 #             'maxvit_rmlp_base_rw_224.sw_in12k_ft_in1k',
 #             pretrained=True,
 #             features_only=True,
 #             out_indices=(1, 2, 3, 4)
 #         )
-#         # hook을 통해 각 stage의 첫 번째 conv.drop_path 출력 저장
 #         self.first_mbconv_features = {}
 #         self._register_first_mbconv_hooks()
         
-#         # 각 stage 정보 추출
 #         feat_infos = self.backbone.feature_info[1:5]
 #         self.stage_indices = []
 #         self.feat_channels = []
@@ -164,14 +152,12 @@
 #             nn.Dropout(drop)
 #         )
 #         # Wavelet branch: LL sub-band feature extraction from grayscale image
-#         # LL 결과의 크기는 (img_size//2, img_size//2)
 #         self.wavelet_linear = nn.Sequential(
 #             nn.Linear((img_size//2) * (img_size//2), hidden_dim // 2),
 #             nn.BatchNorm1d(hidden_dim // 2),
 #             nn.ReLU(),
 #             nn.Dropout(drop)
 #         )
-#         # 프로젝트: wavelet branch를 hidden_dim으로 맞춤
 #         self.wavelet_proj = nn.Linear(hidden_dim // 2, hidden_dim)
 #         # Cross-Attention Fusion: 기본 feature와 wavelet feature를 융합
 #         self.cross_attn = CrossAttentionFusion(hidden_dim, num_tokens=num_tokens, num_heads=4)
@@ -185,9 +171,7 @@
 #         )
     
 #     def _register_first_mbconv_hooks(self):
-#         """
-#         backbone 내부의 모듈 중 이름이 "stages_<stage_idx>.blocks.0.conv.drop_path"인 모듈에 대해 hook 등록.
-#         """
+
 #         for name, module in self.backbone.named_modules():
 #             if name.startswith("stages_"):
 #                 parts = name.split('.')
@@ -243,14 +227,10 @@
 #         wavelet_feature = self.wavelet_linear(ll_flat)  # (B, hidden_dim//2)
 #         wavelet_feature = self.wavelet_proj(wavelet_feature)  # (B, hidden_dim)
         
-#         # Cross-Attention Fusion: 기본 branch feature와 wavelet branch feature 융합
-#         fused_feature = self.cross_attn(basic_feature, wavelet_feature)  # (B, hidden_dim)
-        
-#         # Fusion head를 통해 최종 점수 예측
 #         score = self.fusion_head(fused_feature).squeeze(-1)
 #         return torch.sigmoid(score)
 
-# # 테스트 예시
+
 # if __name__ == "__main__":
 #     model = MANIQA(num_outputs=1, img_size=224, drop=0.3, hidden_dim=512, num_tokens=4)
 #     model.eval()
@@ -258,6 +238,7 @@
 #     with torch.no_grad():
 #         output = model(dummy_input)
 #     print("Output score shape:", output.shape)
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -269,10 +250,7 @@ import numpy as np
 # FPN: multi-scale feature fusion
 class FPN(nn.Module):
     def __init__(self, in_channels_list, out_channels):
-        """
-        in_channels_list: 각 스테이지 feature map의 채널 수 리스트 (예: [C1, C2, C3, C4])
-        out_channels: FPN에서 사용할 통일된 채널 수 (예: 256)
-        """
+
         super().__init__()
         self.lateral_convs = nn.ModuleList([
             nn.Conv2d(in_ch, out_channels, kernel_size=1) for in_ch in in_channels_list
@@ -323,7 +301,6 @@ class SpatialAttention(nn.Module):
         x_cat = torch.cat([avg_out, max_out], dim=1)
         return self.sigmoid(self.conv(x_cat))
 
-# CBAM 모듈: 채널 및 공간 어텐션 결합
 class CBAM(nn.Module):
     def __init__(self, in_channels, reduction=16, kernel_size=7):
         super().__init__()
@@ -334,7 +311,6 @@ class CBAM(nn.Module):
         x = x * self.channel_attention(x)
         return x * self.spatial_attention(x)
 
-# FusionModule: 두 feature map을 concat 후 1x1 Conv, BN, ReLU, CBAM 적용
 class FusionModule(nn.Module):
     def __init__(self, channels):
         super().__init__()
@@ -353,14 +329,10 @@ class FusionModule(nn.Module):
 # Cross-Attention Fusion Module
 class CrossAttentionFusion(nn.Module):
     def __init__(self, hidden_dim, num_tokens=4, num_heads=4):
-        """
-        hidden_dim: 최종 기본 branch feature 차원 (예: 512)
-        num_tokens: feature vector를 분할할 토큰 수 (hidden_dim이 num_tokens로 나누어 떨어져야 함)
-        num_heads: MultiheadAttention의 head 수
-        """
+
         super().__init__()
         self.num_tokens = num_tokens
-        assert hidden_dim % num_tokens == 0, "hidden_dim must be divisible by num_tokens"
+        assert hidden_dim % num_tokens == 0
         self.token_dim = hidden_dim // num_tokens
         self.mha = nn.MultiheadAttention(embed_dim=self.token_dim, num_heads=num_heads)
         self.out_proj = nn.Linear(hidden_dim, hidden_dim)
@@ -378,23 +350,19 @@ class CrossAttentionFusion(nn.Module):
         fused = self.out_proj(attn_output)
         return fused
 
-# MANIQA_HF: MANIQA 모델의 고주파(HF) 버전
 class MANIQA(nn.Module):
     def __init__(self, num_outputs=1, img_size=224, drop=0.1, hidden_dim=512, num_tokens=4, **kwargs):
         super().__init__()
         fpn_out_channels = 256
-        # 기본 branch: MaxViT backbone 사용 (features_only=True)
         self.backbone = timm.create_model(
             'maxvit_rmlp_base_rw_224.sw_in12k_ft_in1k',
             pretrained=True,
             features_only=True,
             out_indices=(1, 2, 3, 4)
         )
-        # hook을 통해 각 stage의 첫 번째 conv.drop_path 출력 저장
         self.first_mbconv_features = {}
         self._register_first_mbconv_hooks()
         
-        # 각 stage 정보 추출
         feat_infos = self.backbone.feature_info[1:5]
         self.stage_indices = []
         self.feat_channels = []
@@ -421,21 +389,17 @@ class MANIQA(nn.Module):
             nn.Dropout(drop)
         )
         
-        # Wavelet branch: 고주파(LH, HL, HH) 성분만 사용
-        # 입력 shape: (B, 3, img_size//2, img_size//2) → flatten → (B, 3 * (img_size//2)^2)
         self.wavelet_linear = nn.Sequential(
             nn.Linear(3 * (img_size // 2) * (img_size // 2), hidden_dim // 2),
             nn.BatchNorm1d(hidden_dim // 2),
             nn.ReLU(inplace=True),
             nn.Dropout(drop)
         )
-        # wavelet branch를 hidden_dim으로 매칭
         self.wavelet_proj = nn.Linear(hidden_dim // 2, hidden_dim)
         
         # Cross-Attention Fusion
         self.cross_attn = CrossAttentionFusion(hidden_dim, num_tokens=num_tokens, num_heads=4)
         
-        # Fusion head: 최종 score 예측
         self.fusion_head = nn.Sequential(
             nn.Linear(hidden_dim, hidden_dim),
             nn.BatchNorm1d(hidden_dim),
@@ -445,9 +409,7 @@ class MANIQA(nn.Module):
         )
     
     def _register_first_mbconv_hooks(self):
-        """
-        backbone 내부의 모듈 중 이름이 "stages_<stage_idx>.blocks.0.conv.drop_path"인 모듈에 대해 hook 등록.
-        """
+
         for name, module in self.backbone.named_modules():
             if name.startswith("stages_"):
                 parts = name.split('.')
@@ -491,18 +453,16 @@ class MANIQA(nn.Module):
         basic_feature = self.mlp_basic(flattened_feature)  # (B, hidden_dim)
         
         # Wavelet branch
-        # RGB → Grayscale (표준 luminance 가중치)
+        # RGB → Grayscale 
         grayscale = 0.2989 * x[:, 0:1, :, :] + 0.5870 * x[:, 1:2, :, :] + 0.1140 * x[:, 2:3, :, :]
         B, _, H, W = grayscale.shape
         
         hf_list = []
         for i in range(B):
-            # numpy array로 변환 후 pywt.dwt2 적용
             img_np = np.array(grayscale[i, 0].cpu())
             coeffs2 = pywt.dwt2(img_np, 'haar')
             # LL, (LH, HL, HH)
             _, (LH, HL, HH) = coeffs2
-            # 고주파 성분 3개를 stacking: (3, H//2, W//2)
             hf_stack = np.stack([LH, HL, HH], axis=0)
             hf_tensor = torch.from_numpy(hf_stack).to(x.device, dtype=x.dtype)
             hf_list.append(hf_tensor)
@@ -515,7 +475,6 @@ class MANIQA(nn.Module):
         # Cross-Attention Fusion
         fused_feature = self.cross_attn(basic_feature, wavelet_feature)  # (B, hidden_dim)
         
-        # Fusion head → 최종 score
         score = self.fusion_head(fused_feature).squeeze(-1)
         return torch.sigmoid(score)
 

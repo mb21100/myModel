@@ -7,9 +7,7 @@ from typing import List
 # pipal SRCC:0.6333 ===== PLCC:0.6305
 # SR4KIQA inference SRCC: 0.7474 PLCC: 0.7308
 # QADS inference # SRCC: 0.8682 PLCC: 0.8627
-########################################
-# CBAM 관련 모듈
-########################################
+
 class ChannelAttention(nn.Module):
     def __init__(self, in_channels, reduction=4):
         super().__init__()
@@ -70,15 +68,10 @@ class SelfAttentionFusionAvg(nn.Module):
     def __init__(self, in_channels_list: List[int], out_channels: int,
                  patch_size: tuple = (7, 7), num_heads: int = 4,
                  num_layers: int = 2, dropout: float = 0.2):
-        """
-        in_channels_list: 각 스테이지 feature map의 채널 수 리스트 (예: [256, 512, 1024, 2048])
-        out_channels: 모든 feature map을 투영할 공통 채널 수 (예: 256)
-        patch_size: 각 feature map을 Adaptive Pooling할 목표 공간 크기 (예: (7,7))
-        """
+
         super().__init__()
         self.patch_size = patch_size
         self.num_features = len(in_channels_list)
-        # 각 feature map 당 patch_count = patch_size[0] * patch_size[1]
         self.token_count = self.num_features * (patch_size[0] * patch_size[1])
         
         self.projs = nn.ModuleList([
@@ -96,10 +89,7 @@ class SelfAttentionFusionAvg(nn.Module):
         nn.init.trunc_normal_(self.pos_embed, std=0.02)
     
     def forward(self, features: List[torch.Tensor]) -> torch.Tensor:
-        """
-        features: list of 4 feature maps, 각각 shape: [B, C_i, H_i, W_i]
-        반환: fused feature vector, shape [B, out_channels]
-        """
+
         B = features[0].size(0)
         tokens = []
         for proj, feat in zip(self.projs, features):
@@ -115,13 +105,10 @@ class SelfAttentionFusionAvg(nn.Module):
         fused_feature = token_seq.mean(dim=1)  # [B, out_channels]
         return fused_feature
 
-#######################################
-#MANIQA_HF (Wavelet 제거 버전)
-#######################################
 class MANIQA(nn.Module):
     def __init__(self, num_outputs=1, img_size=224, drop=0.3, hidden_dim=768, **kwargs):
         super().__init__()
-        fusion_out_channels = 512  # 공통 fusion 차원
+        fusion_out_channels = 512  
 
         # MaxViT backbone (features_only=True)
         self.backbone = timm.create_model(
@@ -133,7 +120,6 @@ class MANIQA(nn.Module):
         self.first_mbconv_features = {}
         self._register_first_mbconv_hooks()
         
-        # 각 stage 정보 추출
         feat_infos = self.backbone.feature_info[1:5]
         self.stage_indices = []
         self.feat_channels = []
@@ -143,7 +129,6 @@ class MANIQA(nn.Module):
             self.feat_channels.append(info['num_chs'])
         self.num_stages = len(self.feat_channels)
         
-        # CBAM 기반 Fusion
         self.fusion_modules = nn.ModuleDict({
             str(stage_idx): FusionModule(channels)
             for stage_idx, channels in zip(self.stage_indices, self.feat_channels)
@@ -151,7 +136,6 @@ class MANIQA(nn.Module):
         self.stage_norms = nn.ModuleList([nn.BatchNorm2d(c) for c in self.feat_channels])
         self.stage_drops = nn.ModuleList([nn.Dropout2d(drop) for _ in range(self.num_stages)])
         
-        # Self-Attention Fusion 모듈
         self.self_attn_fusion = SelfAttentionFusionAvg(
             in_channels_list=self.feat_channels,
             out_channels=fusion_out_channels,
@@ -168,7 +152,6 @@ class MANIQA(nn.Module):
             nn.Dropout(drop)
         )
         
-        # 최종 head (Wavelet 없이 basic_feature만 사용)
         self.fusion_head = nn.Sequential(
             nn.Linear(hidden_dim, hidden_dim),
             nn.BatchNorm1d(hidden_dim),
@@ -181,7 +164,6 @@ class MANIQA(nn.Module):
         for name, module in self.backbone.named_modules():
             if name.startswith("stages_"):
                 parts = name.split('.')
-                # "stages_<stage_idx>.blocks.0.conv.drop_path" 형태 찾기
                 if (len(parts) >= 5 and
                     parts[1] == "blocks" and
                     parts[2] == "0" and
@@ -201,7 +183,6 @@ class MANIQA(nn.Module):
             self.first_mbconv_features[stage_idx] = out
     
     def forward(self, x):
-        # Backbone에서 feature 추출
         self.first_mbconv_features = {}
         backbone_feats = self.backbone(x)
         final_stage_features = {}
@@ -219,11 +200,9 @@ class MANIQA(nn.Module):
             fused_feat = self.stage_drops[i](fused_feat)
             fused_stage_features.append(fused_feat)
         
-        # Self-Attention Fusion으로 여러 스테이지 특징 융합
         basic_feature = self.self_attn_fusion(fused_stage_features)  # [B, fusion_out_channels]
         basic_feature = self.mlp_basic(basic_feature)                # [B, hidden_dim]
         
-        # 최종 score 예측
         score = self.fusion_head(basic_feature).squeeze(-1)
         return torch.sigmoid(score)
 
