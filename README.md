@@ -39,6 +39,9 @@ The pretrained model checkpoints are provided [here](https://drive.google.com/dr
 
 - Deep Learning BIQA Model(HyperIQA, TReS, MANIQA) codes are re-implemented for 5-fold cross-validation and data-loading pipeline. The benchmark codes and results are provided [here]().
 
+## Poster & Paper
+The poster and paper for the project are provided [here](https://drive.google.com/drive/folders/1pc4SUo59Os4-zKnVkDU4wxcq1CYwHMX9?usp=drive_link)
+
 
 ## Usage
 
